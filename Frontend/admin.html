@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family:Arial; background:#111; color:white; padding:20px;">
+
+<h1>Admin Panel 👑</h1>
+
+<h2>📊 Dashboard</h2>
+<div id="dash"></div>
+
+<hr>
+
+<h2>📦 Orders</h2>
+<div id="orders"></div>
+
+<hr>
+
+<h2>🔔 Notifications</h2>
+<div id="notes"></div>
+
+<script>
+
+// DASHBOARD
+function loadDash(){
+  fetch("http://localhost:3000/dashboard")
+  .then(res=>res.json())
+  .then(d=>{
+    document.getElementById("dash").innerHTML = `
+      Users: ${d.users} <br>
+      Orders: ${d.orders} <br>
+      Revenue: ₹${d.revenue}
+    `;
+  });
+}
+
+// ORDERS
+function loadOrders(){
+  fetch("http://localhost:3000/all-orders")
+  .then(res=>res.json())
+  .then(data=>{
+
+    let html="";
+
+    data.forEach(o=>{
+      html+=`
+        <div style="border:1px solid white; margin:10px; padding:10px;">
+          <b>Order ID:</b> ${o.id}<br>
+          <b>User:</b> ${o.username}<br>
+          <b>Status:</b> ${o.status}<br>
+          <b>Payment:</b> ${o.payment}<br>
+
+          <button onclick="update(${o.id}, 'Accepted')">Accept</button>
+          <button onclick="update(${o.id}, 'Shipped')">Ship</button>
+          <button onclick="update(${o.id}, 'Delivered')">Deliver</button>
+        </div>
+      `;
+    });
+
+    document.getElementById("orders").innerHTML=html;
+
+  });
+}
+
+// UPDATE ORDER
+function update(id, status){
+  fetch("http://localhost:3000/update-order", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id, status})
+  }).then(loadOrders);
+}
+
+// NOTIFICATIONS
+function loadNotes(){
+  fetch("http://localhost:3000/notifications")
+  .then(res=>res.json())
+  .then(data=>{
+    document.getElementById("notes").innerHTML =
+      data.map(n=>`<div>${n}</div>`).join("");
+  });
+}
+
+// LOAD ALL
+loadDash();
+loadOrders();
+loadNotes();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>My Orders</h2>
+
+<div id="orders"></div>
+
+<script>
+
+const token = localStorage.getItem("token");
+
+fetch("http://localhost:3000/all-orders", {
+  headers:{
+    "Authorization": token
+  }
+})
+.then(res=>res.json())
+.then(data=>{
+
+  let html="";
+
+  data.forEach(o=>{
+    html+=`
+      <div>
+        <h3>Order ID: ${o.id}</h3>
+        <p>Status: ${o.status}</p>
+        <p>${o.date}</p>
+      </div>
+      <hr>
+    `;
+  });
+
+  document.getElementById("orders").innerHTML=html;
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: white;
+      text-align: center;
+      padding-top: 100px;
+    }
+
+    input {
+      padding: 10px;
+      width: 250px;
+      margin: 10px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      background: gold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Login / Signup</h2>
+
+<input id="username" placeholder="Username"><br>
+<input id="password" type="password" placeholder="Password"><br>
+
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
+
+<script>
+
+// SIGNUP
+function signup(){
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  fetch("http://localhost:3000/signup", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ username, password })
+  })
+  .then(res => res.text())
+  .then(msg => alert(msg))
+  .catch(() => alert("Server error ❌"));
+}
+
+
+// LOGIN (🔥 FIXED WITH TOKEN)
+function login(){
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  fetch("http://localhost:3000/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ username, password })
+  })
+  .then(async res => {
+
+    if(!res.ok){
+      throw new Error("Invalid login ❌");
+    }
+
+    const data = await res.json();
+
+    // ✅ SAVE TOKEN + USER
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    alert("Login success ✅");
+
+    if(data.user.isAdmin){
+      window.location.href = "admin.html";
+    } else {
+      window.location.href = "index.html";
+    }
+  })
+  .catch(err => alert(err.message));
+}
+
+</script>
+
+</body>
+</html>
