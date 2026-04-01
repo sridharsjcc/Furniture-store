@@ -1,147 +1,43 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Furniture Store</title>
-
-  <style>
-    body {
-      font-family: Arial;
-      background: #f5f5f5;
-      margin: 0;
-    }
-
-    .header {
-      background: #131921;
-      color: white;
-      padding: 15px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .header a {
-      color: white;
-      text-decoration: none;
-      margin-left: 15px;
-    }
-
-    .container {
-      padding: 20px;
-    }
-
-    input, select {
-      padding: 8px;
-      margin: 10px;
-    }
-
-    #products {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-    }
-
-    .card {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 0 5px #ccc;
-      text-align: center;
-    }
-
-    img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
-    button {
-      padding: 8px 12px;
-      background: orange;
-      color: black;
-      border: none;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-  </style>
-</head>
-
 <body>
 
-<div class="header">
-  <h2>🛒 Amazon Clone</h2>
-  <div>
-    <a href="login.html">Login</a>
-  </div>
-</div>
-
-<div class="container">
-
-<input id="search" placeholder="Search..." onkeyup="load()">
-<select id="filter" onchange="load()">
-  <option value="">All</option>
-  <option value="10000">Below 10k</option>
-  <option value="50000">Below 50k</option>
-</select>
+<h2>Store</h2>
+<a href="login.html">Login</a>
 
 <div id="products"></div>
 
-</div>
-
 <script>
 
-const token = localStorage.getItem("token");
-const BASE_URL = "https://furniturebackend-adua.onrender.com";
+const BASE="https://furniturebackend-adua.onrender.com";
+const token=localStorage.getItem("token");
 
-function load(){
-
-fetch(BASE_URL + "/products")
-.then(res=>res.json())
+fetch(BASE+"/products")
+.then(r=>r.json())
 .then(data=>{
-
-let s = search.value.toLowerCase();
-let f = filter.value;
-
-let html = "";
-
-data.filter(p=>{
-  return p.name.toLowerCase().includes(s) &&
-  (f ? p.price <= f : true);
-})
-.forEach(p=>{
-  html += `
-  <div class="card">
-    <img src="${p.image}">
-    <h3>${p.name}</h3>
-    <p>₹${p.price}</p>
-    <button onclick='add(${JSON.stringify(p)})'>Add to Cart</button>
-  </div>`;
+let html="";
+data.forEach(p=>{
+html+=`
+<div>
+<img src="${p.image}" width="150">
+<h3>${p.name}</h3>
+<p>${p.price}</p>
+<button onclick='add(${JSON.stringify(p)})'>Add</button>
+</div>`;
 });
-
-products.innerHTML = html;
-
+products.innerHTML=html;
 });
-}
 
 function add(p){
-
-if(!token){
-  alert("Please login first ❗");
-  return;
+fetch(BASE+"/add-to-cart",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":token
+},
+body:JSON.stringify({product:p})
+});
 }
-
-fetch(BASE_URL + "/add-to-cart",{
-  method:"POST",
-  headers:{
-    "Content-Type":"application/json",
-    "Authorization":token
-  },
-  body:JSON.stringify({product:p})
-})
-.then(()=>alert("Added to cart 🛒"));
-
-}
-
-load();
 
 </script>
 
