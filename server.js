@@ -1,190 +1,114 @@
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const app = express();
 
-// ✅ CORS FIX (VERY IMPORTANT)
-app.use(cors({
-  origin: "*",   // allow all (for now)
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
-
+app.use(cors());
 app.use(express.json());
 
-const SECRET = "mysecretkey";
+const SECRET = "secret123";
 
-console.log("🔥 FINAL PRO SERVER RUNNING");
+// ===== LOAD DATA =====
+let users = JSON.parse(fs.readFileSync("users.json", "utf-8"));
+let products = JSON.parse(fs.readFileSync("products.json", "utf-8"));
 
-// ================= DATA =================
+// ===== SAVE FUNCTIONS =====
+function saveUsers(){
+  fs.writeFileSync("users.json", JSON.stringify(users));
+}
 
-let users = [];
+function saveProducts(){
+  fs.writeFileSync("products.json", JSON.stringify(products));
+}
 
-let products = [
-  {
-    id: 1,
-    name: "Luxury Sofa",
-    price: 45000,
-    stock: 5,
-    image: "https://images.unsplash.com/photo-1582582429416-1f0d9c9b4f2e"
-  },
-  {
-    id: 2,
-    name: "Premium Chair",
-    price: 8000,
-    stock: 10,
-    image: "https://images.unsplash.com/photo-1598300053653-d3bfcf6c4b6b"
-  }
-];
+// ===== AUTH =====
 
-let orders = [];
-let notifications = [];
+app.post("/signup", async (req,res)=>{
+  const {username,password} = req.body;
 
-// ================= AUTH =================
-
-// SIGNUP
-app.post("/signup", async (req, res) => {
-  const { username, password } = req.body;
-
-  if(users.find(u => u.username === username)){
-    return res.send("User already exists ❌");
+  if(users.find(u=>u.username===username)){
+    return res.send("User exists");
   }
 
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await bcrypt.hash(password,10);
 
   users.push({
     username,
-    password: hash,
-    cart: [],
-    isAdmin: username === "admin"
+    password:hash,
+    cart:[],
+    isAdmin: username==="admin"
   });
 
-  res.send("Registered ✅");
+  saveUsers();
+  res.send("Signup success");
 });
 
-// LOGIN
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+app.post("/login", async (req,res)=>{
+  const {username,password} = req.body;
 
-  const user = users.find(u => u.username === username);
+  const user = users.find(u=>u.username===username);
+  if(!user) return res.send("Invalid");
 
-  if(!user){
-    return res.status(401).send("Invalid ❌");
-  }
+  const match = await bcrypt.compare(password,user.password);
+  if(!match) return res.send("Invalid");
 
-  const match = await bcrypt.compare(password, user.password);
-
-  if(!match){
-    return res.status(401).send("Invalid ❌");
-  }
-
-  const token = jwt.sign(
-    { username: user.username, isAdmin: user.isAdmin },
-    SECRET
-  );
-
-  res.send({ token, user });
+  const token = jwt.sign(user,SECRET);
+  res.send({token});
 });
 
-// ================= MIDDLEWARE =================
-
-function auth(req, res, next){
-  const token = req.headers.authorization;
-
-  if(!token) return res.status(403).send("No token ❌");
-
-  try {
-    const data = jwt.verify(token, SECRET);
+function auth(req,res,next){
+  try{
+    const data = jwt.verify(req.headers.authorization,SECRET);
     req.user = data;
     next();
-  } catch {
-    res.status(403).send("Invalid token ❌");
+  }catch{
+    res.send("Unauthorized");
   }
 }
 
-// ================= PRODUCTS =================
+// ===== PRODUCTS =====
 
-app.get("/products", (req, res) => {
+app.get("/products",(req,res)=>{
   res.send(products);
 });
 
-// ADD PRODUCT
-app.post("/add-product", auth, (req, res) => {
+app.post("/add-product",auth,(req,res)=>{
+  if(!req.user.isAdmin) return res.send("Admin only");
 
-  if(!req.user.isAdmin){
-    return res.send("Admin only ❌");
-  }
-
-  const { name, price, stock, image } = req.body;
+  const {name,price,image} = req.body;
 
   products.push({
-    id: products.length + 1,
+    id:Date.now(),
     name,
     price,
-    stock,
     image
   });
 
-  res.send("Product added ✅");
+  saveProducts();
+  res.send("Added");
 });
 
-// DELETE PRODUCT
-app.post("/delete-product", auth, (req, res) => {
+// ===== CART =====
 
-  if(!req.user.isAdmin){
-    return res.send("Admin only ❌");
-  }
+app.post("/add-to-cart",auth,(req,res)=>{
+  const user = users.find(u=>u.username===req.user.username);
 
-  const { id } = req.body;
+  user.cart.push(req.body.product);
 
-  products = products.filter(p => p.id !== id);
-
-  res.send("Deleted 🗑️");
+  saveUsers();
+  res.send("Added");
 });
 
-// ================= CART =================
-
-app.post("/add-to-cart", auth, (req, res) => {
-
-  const { product } = req.body;
-
-  const user = users.find(u => u.username === req.user.username);
-  const dbProduct = products.find(p => p.id === product.id);
-
-  if(!dbProduct || dbProduct.stock <= 0){
-    return res.send("Out of stock ❌");
-  }
-
-  let item = user.cart.find(i => i.id === product.id);
-
-  if(item){
-    item.qty++;
-  } else {
-    user.cart.push({ ...product, qty: 1 });
-  }
-
-  dbProduct.stock--;
-
-  res.send("Added to cart 🛒");
-});
-
-app.post("/get-cart", auth, (req, res) => {
-  const user = users.find(u => u.username === req.user.username);
+app.post("/get-cart",auth,(req,res)=>{
+  const user = users.find(u=>u.username===req.user.username);
   res.send(user.cart);
 });
 
-// ================= SERVER =================
+// ===== SERVER =====
 
-// ✅ MUST for Render
-const PORT = process.env.PORT || 3000;
+app.get("/",(req,res)=>res.send("Backend Running"));
 
-// ✅ Health check (helps debugging)
-app.get("/", (req, res) => {
-  res.send("Backend running 🚀");
-});
-
-app.listen(PORT, () => {
-  console.log("🚀 Server running on port " + PORT);
-});
+app.listen(process.env.PORT || 3000);
