@@ -1,14 +1,62 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>Furniture Store</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input, select {
+      padding: 8px;
+      margin: 10px;
+    }
+
+    #products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px #ccc;
+      text-align: center;
+    }
+
+    button {
+      padding: 8px 12px;
+      background: green;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: darkgreen;
+    }
+  </style>
+</head>
+
 <body>
 
-<h2>Furniture Store</h2>
+<h2>🛒 Furniture Store</h2>
 
 <input id="search" placeholder="Search..." onkeyup="load()">
 <select id="filter" onchange="load()">
-<option value="">All</option>
-<option value="10000">Below 10k</option>
-<option value="50000">Below 50k</option>
+  <option value="">All</option>
+  <option value="10000">Below 10k</option>
+  <option value="50000">Below 50k</option>
 </select>
 
 <div id="products"></div>
@@ -17,44 +65,55 @@
 
 const token = localStorage.getItem("token");
 
+// ✅ BACKEND URL (VERY IMPORTANT)
+const BASE_URL = "https://furniturebackend-adua.onrender.com";
+
 function load(){
 
-fetch("https://furniturebackend-adua.onrender.com/products")
+fetch(BASE_URL + "/products")
 .then(res=>res.json())
 .then(data=>{
 
-let s=search.value.toLowerCase();
-let f=filter.value;
+let s = search.value.toLowerCase();
+let f = filter.value;
 
-let html="";
+let html = "";
 
 data.filter(p=>{
-return p.name.toLowerCase().includes(s) &&
-(f? p.price<=f:true);
+  return p.name.toLowerCase().includes(s) &&
+  (f ? p.price <= f : true);
 })
 .forEach(p=>{
-html+=`
-<div>
-<h3>${p.name}</h3>
-<p>₹${p.price}</p>
-<button onclick='add(${JSON.stringify(p)})'>Add</button>
-</div>`;
+  html += `
+  <div class="card">
+    <h3>${p.name}</h3>
+    <p>₹${p.price}</p>
+    <button onclick='add(${JSON.stringify(p)})'>Add</button>
+  </div>`;
 });
 
-products.innerHTML=html;
+products.innerHTML = html;
 
 });
 }
 
 function add(p){
-fetch("https://furniturebackend-adua.onrender.com/add-to-cart",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":token
-},
-body:JSON.stringify({product:p})
-}).then(()=>alert("Added"));
+
+if(!token){
+  alert("Please login first ❗");
+  return;
+}
+
+fetch(BASE_URL + "/add-to-cart",{
+  method:"POST",
+  headers:{
+    "Content-Type":"application/json",
+    "Authorization":token
+  },
+  body:JSON.stringify({product:p})
+})
+.then(()=>alert("Added to cart 🛒"));
+
 }
 
 load();
