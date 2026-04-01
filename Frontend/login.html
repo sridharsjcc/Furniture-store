@@ -6,91 +6,77 @@
   <style>
     body {
       font-family: Arial;
-      background: #111;
-      color: white;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
       text-align: center;
-      padding-top: 100px;
     }
 
     input {
+      width: 90%;
       padding: 10px;
-      width: 250px;
       margin: 10px;
-      border-radius: 6px;
-      border: none;
     }
 
     button {
-      padding: 10px 20px;
-      margin: 10px;
-      background: gold;
+      padding: 10px;
+      width: 100%;
+      background: orange;
       border: none;
-      border-radius: 6px;
       cursor: pointer;
-      font-weight: bold;
     }
   </style>
 </head>
 
 <body>
 
-<h2>Login / Signup</h2>
+<div class="box">
+  <h2>Login</h2>
 
-<input id="username" placeholder="Username"><br>
-<input id="password" type="password" placeholder="Password"><br>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
 
-<button onclick="signup()">Signup</button>
-<button onclick="login()">Login</button>
+  <button onclick="login()">Login</button>
+</div>
 
 <script>
 
-// SIGNUP
-function signup(){
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+const BASE_URL = "https://furniturebackend-adua.onrender.com";
 
-  fetch("http://localhost:3000/signup", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username, password })
-  })
-  .then(res => res.text())
-  .then(msg => alert(msg))
-  .catch(() => alert("Server error ❌"));
-}
-
-
-// LOGIN (🔥 FIXED WITH TOKEN)
 function login(){
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
 
-  fetch("http://localhost:3000/login", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username, password })
+fetch(BASE_URL + "/login",{
+  method:"POST",
+  headers:{
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+    username:username.value,
+    password:password.value
   })
-  .then(async res => {
+})
+.then(res=>res.json())
+.then(data=>{
 
-    if(!res.ok){
-      throw new Error("Invalid login ❌");
-    }
-
-    const data = await res.json();
-
-    // ✅ SAVE TOKEN + USER
+  if(data.token){
     localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-
     alert("Login success ✅");
+    window.location = "index.html";
+  } else {
+    alert("Login failed ❌");
+  }
 
-    if(data.user.isAdmin){
-      window.location.href = "admin.html";
-    } else {
-      window.location.href = "index.html";
-    }
-  })
-  .catch(err => alert(err.message));
+});
+
 }
 
 </script>
