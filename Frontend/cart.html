@@ -1,142 +1,184 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cart</title>
+<title>Cart</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #f1f3f6;
-    }
+<style>
+body{margin:0;font-family:Arial;background:#f1f3f6;}
 
-    header {
-      background: #131921;
-      color: white;
-      padding: 15px;
-      font-size: 22px;
-      display:flex;
-      justify-content:space-between;
-    }
+header{
+  background:#131921;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+}
 
-    a{
-      color:white;
-      text-decoration:none;
-    }
+a{color:white;text-decoration:none;}
 
-    .container {
-      display: flex;
-      gap: 20px;
-      padding: 20px;
-    }
+.container{display:flex;gap:20px;padding:20px;}
+.left{flex:2;}
+.right{flex:1;}
 
-    .left { flex: 2; }
-    .right { flex: 1; }
+.item{
+  display:flex;
+  gap:15px;
+  background:white;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:10px;
+}
 
-    .item {
-      display: flex;
-      gap: 15px;
-      background: white;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 10px;
-    }
+.item img{
+  width:120px;
+  height:90px;
+  object-fit:cover;
+}
 
-    .item img {
-      width: 120px;
-      border-radius: 8px;
-    }
+button{
+  padding:5px 10px;
+  margin:3px;
+  cursor:pointer;
+}
 
-    .price { color: green; }
+.summary{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+}
 
-    .summary {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-    }
-
-    .checkout {
-      width: 100%;
-      padding: 12px;
-      background: orange;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+.checkout{
+  width:100%;
+  padding:12px;
+  background:orange;
+  border:none;
+  cursor:pointer;
+}
+</style>
 </head>
 
 <body>
 
 <header>
-  🛒 Your Cart
+  🛒 Cart
   <a href="index.html">Home</a>
 </header>
 
 <div class="container">
 
-  <div class="left" id="cartItems"></div>
+<div class="left" id="cartItems"></div>
 
-  <div class="right">
-    <div class="summary">
-      <h3>Price Details</h3>
+<div class="right">
+<div class="summary">
+<h3>Price Details</h3>
 
-      <p>Subtotal: <span id="subtotal">₹0</span></p>
-      <p>GST (18%): <span id="gst">₹0</span></p>
-      <p>Transport: <span id="delivery">₹0</span></p>
+<p>Subtotal: ₹<span id="subtotal">0</span></p>
+<p>GST: ₹<span id="gst">0</span></p>
+<p>Delivery: ₹<span id="delivery">0</span></p>
 
-      <h3>Total: <span id="total">₹0</span></h3>
+<h3>Total: ₹<span id="total">0</span></h3>
 
-      <button class="checkout">Checkout</button>
-    </div>
-  </div>
+<button class="checkout">Checkout</button>
+</div>
+</div>
 
 </div>
 
 <script>
 
 const BASE="https://furniturebackend-adua.onrender.com";
-const token = localStorage.getItem("token");
+const token=localStorage.getItem("token");
 
-fetch(BASE + "/get-cart", {
-  method:"POST",
-  headers:{
-    "Content-Type":"application/json",
-    "Authorization":token
-  }
+function load(){
+fetch(BASE+"/get-cart",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":token
+}
 })
-.then(res=>res.json())
+.then(r=>r.json())
 .then(data=>render(data));
+}
 
 function render(data){
 
-  let html="";
-  let subtotal=0;
+let html="";
+let subtotal=0;
 
-  data.forEach(i=>{
-    subtotal += i.price;
+data.forEach(i=>{
+subtotal += i.price * i.qty;
 
-    html+=`
-    <div class="item">
-      <img src="${i.image}">
-      <div>
-        <h3>${i.name}</h3>
-        <p class="price">₹${i.price}</p>
-      </div>
-    </div>`;
-  });
+html += `
+<div class="item">
+<img src="${i.image}">
+<div>
+<h3>${i.name}</h3>
+<p>₹${i.price}</p>
 
-  document.getElementById("cartItems").innerHTML=html;
+<div>
+<button onclick="dec(${i.id})">-</button>
+${i.qty}
+<button onclick="inc(${i.id})">+</button>
+</div>
 
-  let gst=Math.round(subtotal*0.18);
-  let delivery=subtotal>0?500:0;
-  let total=subtotal+gst+delivery;
+<button onclick="removeItem(${i.id})">❌ Remove</button>
 
-  document.getElementById("subtotal").innerText="₹"+subtotal;
-  document.getElementById("gst").innerText="₹"+gst;
-  document.getElementById("delivery").innerText="₹"+delivery;
-  document.getElementById("total").innerText="₹"+total;
+</div>
+</div>`;
+});
+
+cartItems.innerHTML = html;
+
+let gst=Math.round(subtotal*0.18);
+let delivery=subtotal>0?500:0;
+let total=subtotal+gst+delivery;
+
+subtotalEl.innerText=subtotal;
+gstEl.innerText=gst;
+deliveryEl.innerText=delivery;
+totalEl.innerText=total;
 }
+
+function inc(id){
+fetch(BASE+"/inc",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":token
+},
+body:JSON.stringify({id})
+}).then(load);
+}
+
+function dec(id){
+fetch(BASE+"/dec",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":token
+},
+body:JSON.stringify({id})
+}).then(load);
+}
+
+function removeItem(id){
+fetch(BASE+"/remove",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":token
+},
+body:JSON.stringify({id})
+}).then(load);
+}
+
+const subtotalEl=document.getElementById("subtotal");
+const gstEl=document.getElementById("gst");
+const deliveryEl=document.getElementById("delivery");
+const totalEl=document.getElementById("total");
+
+load();
 
 </script>
 
