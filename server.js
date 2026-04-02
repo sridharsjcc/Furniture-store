@@ -142,6 +142,12 @@ app.post("/delete-product",auth,(req,res)=>{
   res.send("Deleted 🗑️");
 });
 
+// GET SINGLE PRODUCT
+app.get("/product/:id",(req,res)=>{
+  const product = products.find(p=>p.id==req.params.id);
+  res.send(product);
+});
+
 // ===== CART =====
 
 // ADD TO CART
