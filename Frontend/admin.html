@@ -1,88 +1,118 @@
 <!DOCTYPE html>
 <html>
-<body style="font-family:Arial; background:#111; color:white; padding:20px;">
+<head>
+<title>Admin Panel</title>
 
-<h1>Admin Panel 👑</h1>
+<style>
+body{
+  font-family:Arial;
+  background:#f1f3f6;
+  padding:20px;
+}
 
-<h2>📊 Dashboard</h2>
-<div id="dash"></div>
+.box{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+}
 
-<hr>
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+}
 
-<h2>📦 Orders</h2>
-<div id="orders"></div>
+button{
+  padding:10px;
+  width:100%;
+  margin-top:5px;
+  cursor:pointer;
+}
 
-<hr>
+.products{
+  margin-top:30px;
+}
 
-<h2>🔔 Notifications</h2>
-<div id="notes"></div>
+.card{
+  background:white;
+  padding:10px;
+  margin:10px 0;
+  border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>👑 Admin Panel</h2>
+
+<div class="box">
+<h3>Add Product</h3>
+
+<input id="name" placeholder="Product name">
+<input id="price" placeholder="Price">
+<input id="image" placeholder="Image URL">
+
+<button onclick="addProduct()">Add Product</button>
+</div>
+
+<div class="products">
+<h3>All Products</h3>
+<div id="list"></div>
+</div>
 
 <script>
 
-// DASHBOARD
-function loadDash(){
-  fetch("http://localhost:3000/dashboard")
-  .then(res=>res.json())
-  .then(d=>{
-    document.getElementById("dash").innerHTML = `
-      Users: ${d.users} <br>
-      Orders: ${d.orders} <br>
-      Revenue: ₹${d.revenue}
-    `;
-  });
+const BASE="https://furniturebackend-adua.onrender.com";
+const token=localStorage.getItem("token");
+
+// 🔐 check admin
+if(!token){
+alert("Login first ❌");
+location.href="login.html";
 }
 
-// ORDERS
-function loadOrders(){
-  fetch("http://localhost:3000/all-orders")
-  .then(res=>res.json())
-  .then(data=>{
-
-    let html="";
-
-    data.forEach(o=>{
-      html+=`
-        <div style="border:1px solid white; margin:10px; padding:10px;">
-          <b>Order ID:</b> ${o.id}<br>
-          <b>User:</b> ${o.username}<br>
-          <b>Status:</b> ${o.status}<br>
-          <b>Payment:</b> ${o.payment}<br>
-
-          <button onclick="update(${o.id}, 'Accepted')">Accept</button>
-          <button onclick="update(${o.id}, 'Shipped')">Ship</button>
-          <button onclick="update(${o.id}, 'Delivered')">Deliver</button>
-        </div>
-      `;
-    });
-
-    document.getElementById("orders").innerHTML=html;
-
-  });
+// ADD PRODUCT
+function addProduct(){
+fetch(BASE+"/add-product",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":token
+},
+body:JSON.stringify({
+name:name.value,
+price:Number(price.value),
+image:image.value
+})
+})
+.then(res=>res.text())
+.then(msg=>{
+alert(msg);
+load();
+});
 }
 
-// UPDATE ORDER
-function update(id, status){
-  fetch("http://localhost:3000/update-order", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({id, status})
-  }).then(loadOrders);
+// LOAD PRODUCTS
+function load(){
+fetch(BASE+"/products")
+.then(res=>res.json())
+.then(data=>{
+let html="";
+data.forEach(p=>{
+html+=`
+<div class="card">
+<img src="${p.image}" width="100"><br>
+<b>${p.name}</b><br>
+₹${p.price}
+</div>`;
+});
+list.innerHTML=html;
+});
 }
 
-// NOTIFICATIONS
-function loadNotes(){
-  fetch("http://localhost:3000/notifications")
-  .then(res=>res.json())
-  .then(data=>{
-    document.getElementById("notes").innerHTML =
-      data.map(n=>`<div>${n}</div>`).join("");
-  });
-}
-
-// LOAD ALL
-loadDash();
-loadOrders();
-loadNotes();
+load();
 
 </script>
 
