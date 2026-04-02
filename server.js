@@ -11,7 +11,7 @@ app.use(express.json());
 
 const SECRET = "secret123";
 
-// ✅ SAFE LOAD FUNCTION
+// ===== SAFE LOAD =====
 function loadJSON(file){
   try{
     const data = fs.readFileSync(file,"utf-8");
@@ -21,10 +21,12 @@ function loadJSON(file){
   }
 }
 
+// ===== DATA =====
 let users = loadJSON("users.json");
 let products = loadJSON("products.json");
+let orders = loadJSON("orders.json");
 
-// SAVE
+// ===== SAVE =====
 function saveUsers(){
   fs.writeFileSync("users.json", JSON.stringify(users,null,2));
 }
@@ -33,8 +35,13 @@ function saveProducts(){
   fs.writeFileSync("products.json", JSON.stringify(products,null,2));
 }
 
+function saveOrders(){
+  fs.writeFileSync("orders.json", JSON.stringify(orders,null,2));
+}
+
 // ===== AUTH =====
 
+// SIGNUP
 app.post("/signup", async (req,res)=>{
   const {username,password} = req.body;
 
@@ -55,6 +62,7 @@ app.post("/signup", async (req,res)=>{
   res.send("Signup success ✅");
 });
 
+// LOGIN
 app.post("/login", async (req,res)=>{
   const {username,password} = req.body;
 
@@ -72,7 +80,7 @@ app.post("/login", async (req,res)=>{
   res.send({token});
 });
 
-// AUTH
+// AUTH MIDDLEWARE
 function auth(req,res,next){
   try{
     const data = jwt.verify(req.headers.authorization,SECRET);
@@ -83,7 +91,8 @@ function auth(req,res,next){
   }
 }
 
-// PRODUCTS
+// ===== PRODUCTS =====
+
 app.get("/products",(req,res)=>{
   res.send(products);
 });
@@ -104,7 +113,8 @@ app.post("/add-product",auth,(req,res)=>{
   res.send("Product added ✅");
 });
 
-// CART
+// ===== CART =====
+
 app.post("/add-to-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   const product = req.body.product;
@@ -149,9 +159,47 @@ app.post("/remove",auth,(req,res)=>{
   res.send("Removed");
 });
 
-// HEALTH
+// ===== 🧾 ORDERS / CHECKOUT =====
+
+// PLACE ORDER
+app.post("/place-order", auth, (req,res)=>{
+
+  const user = users.find(u=>u.username===req.user.username);
+
+  if(!user.cart.length){
+    return res.send("Cart empty ❌");
+  }
+
+  const order = {
+    id: Date.now(),
+    username: user.username,
+    items: user.cart,
+    total: user.cart.reduce((sum,i)=>sum+i.price*i.qty,0),
+    date: new Date().toLocaleString(),
+    status: "Placed"
+  };
+
+  orders.push(order);
+
+  user.cart = []; // clear cart
+
+  saveUsers();
+  saveOrders();
+
+  res.send("Order placed ✅");
+});
+
+// GET USER ORDERS
+app.get("/my-orders", auth, (req,res)=>{
+  const userOrders = orders.filter(o=>o.username===req.user.username);
+  res.send(userOrders);
+});
+
+// ===== HEALTH =====
 app.get("/",(req,res)=>res.send("Backend Running 🚀"));
 
-app.listen(process.env.PORT || 3000,()=>{
-  console.log("🚀 Server running");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT,()=>{
+  console.log("🚀 Server running on port " + PORT);
 });
