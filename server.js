@@ -30,11 +30,9 @@ let orders = loadJSON("orders.json");
 function saveUsers(){
   fs.writeFileSync("users.json", JSON.stringify(users,null,2));
 }
-
 function saveProducts(){
   fs.writeFileSync("products.json", JSON.stringify(products,null,2));
 }
-
 function saveOrders(){
   fs.writeFileSync("orders.json", JSON.stringify(orders,null,2));
 }
@@ -81,14 +79,10 @@ app.post("/login", async (req,res)=>{
     SECRET
   );
 
-  res.send({
-    token,
-    username:user.username,
-    isAdmin:user.isAdmin
-  });
+  res.send({ token, username:user.username, isAdmin:user.isAdmin });
 });
 
-// AUTH MIDDLEWARE
+// AUTH
 function auth(req,res,next){
   try{
     const token = req.headers.authorization;
@@ -104,57 +98,49 @@ function auth(req,res,next){
 
 // ===== PRODUCTS =====
 
-// GET PRODUCTS
+// GET ALL
 app.get("/products",(req,res)=>{
   res.send(products);
 });
 
-// ADD PRODUCT (ADMIN)
+// GET SINGLE
+app.get("/product/:id",(req,res)=>{
+  const product = products.find(p=>p.id==req.params.id);
+  res.send(product || {});
+});
+
+// ADD PRODUCT
 app.post("/add-product",auth,(req,res)=>{
   if(!req.user.isAdmin) return res.send("Admin only ❌");
 
-  const {name,price,image} = req.body;
-
-  if(!name || !price){
-    return res.send("Missing fields ❌");
-  }
+  const {name,price,images,description} = req.body;
 
   products.push({
     id:Date.now(),
     name,
     price,
-    image: image || "https://via.placeholder.com/150"
+    images: images || [],
+    description: description || ""
   });
 
   saveProducts();
   res.send("Product added ✅");
 });
 
-// DELETE PRODUCT (ADMIN)
+// DELETE PRODUCT
 app.post("/delete-product",auth,(req,res)=>{
   if(!req.user.isAdmin) return res.send("Admin only ❌");
 
-  const {id} = req.body;
-
-  products = products.filter(p=>p.id !== id);
+  products = products.filter(p=>p.id !== req.body.id);
 
   saveProducts();
   res.send("Deleted 🗑️");
 });
 
-// GET SINGLE PRODUCT
-app.get("/product/:id",(req,res)=>{
-  const product = products.find(p=>p.id==req.params.id);
-  res.send(product);
-});
-
 // ===== CART =====
 
-// ADD TO CART
 app.post("/add-to-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
-  if(!user) return res.send("User not found ❌");
-
   const product = req.body.product;
 
   let item = user.cart.find(i=>i.id===product.id);
@@ -169,49 +155,36 @@ app.post("/add-to-cart",auth,(req,res)=>{
   res.send("Added 🛒");
 });
 
-// GET CART
 app.post("/get-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   res.send(user.cart);
 });
 
-// INCREASE QTY
 app.post("/inc",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
-  const item = user.cart.find(i=>i.id===req.body.id);
-
+  let item = user.cart.find(i=>i.id===req.body.id);
   if(item) item.qty++;
-
   saveUsers();
-  res.send("Updated ➕");
+  res.send("Updated");
 });
 
-// DECREASE QTY
 app.post("/dec",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
-  const item = user.cart.find(i=>i.id===req.body.id);
-
-  if(item && item.qty > 1){
-    item.qty--;
-  }
-
+  let item = user.cart.find(i=>i.id===req.body.id);
+  if(item && item.qty>1) item.qty--;
   saveUsers();
-  res.send("Updated ➖");
+  res.send("Updated");
 });
 
-// REMOVE ITEM
 app.post("/remove",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
-
-  user.cart = user.cart.filter(i=>i.id !== req.body.id);
-
+  user.cart = user.cart.filter(i=>i.id!==req.body.id);
   saveUsers();
-  res.send("Removed ❌");
+  res.send("Removed");
 });
 
 // ===== ORDERS =====
 
-// PLACE ORDER
 app.post("/place-order", auth, (req,res)=>{
 
   const user = users.find(u=>u.username===req.user.username);
@@ -230,7 +203,6 @@ app.post("/place-order", auth, (req,res)=>{
   };
 
   orders.push(order);
-
   user.cart = [];
 
   saveUsers();
@@ -239,26 +211,18 @@ app.post("/place-order", auth, (req,res)=>{
   res.send("Order placed ✅");
 });
 
-// USER ORDERS
 app.get("/my-orders", auth, (req,res)=>{
-  const userOrders = orders.filter(o=>o.username===req.user.username);
-  res.send(userOrders);
+  res.send(orders.filter(o=>o.username===req.user.username));
 });
 
-// ADMIN ALL ORDERS
 app.get("/all-orders", auth, (req,res)=>{
-  if(!req.user.isAdmin){
-    return res.send("Admin only ❌");
-  }
+  if(!req.user.isAdmin) return res.send("Admin only ❌");
   res.send(orders);
 });
 
-// ===== HEALTH =====
+// ===== SERVER =====
 app.get("/",(req,res)=>res.send("Backend Running 🚀"));
 
-// ===== START SERVER =====
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT,()=>{
-  console.log("🚀 Server running on port " + PORT);
+app.listen(process.env.PORT || 3000,()=>{
+  console.log("🚀 Server running");
 });
