@@ -2,36 +2,49 @@
 <html>
 <body>
 
-<h2>My Orders</h2>
+<h2>📦 My Orders</h2>
+
+<a href="index.html">⬅ Home</a>
 
 <div id="orders"></div>
 
 <script>
 
+const BASE = "https://furniturebackend-adua.onrender.com";
 const token = localStorage.getItem("token");
 
-fetch("http://localhost:3000/all-orders", {
-  headers:{
-    "Authorization": token
-  }
+if(!token){
+  alert("Login first ❌");
+  location.href="login.html";
+}
+
+fetch(BASE + "/my-orders",{
+headers:{"Authorization":token}
 })
 .then(res=>res.json())
 .then(data=>{
 
-  let html="";
+let html="";
 
-  data.forEach(o=>{
-    html+=`
-      <div>
-        <h3>Order ID: ${o.id}</h3>
-        <p>Status: ${o.status}</p>
-        <p>${o.date}</p>
-      </div>
-      <hr>
-    `;
-  });
+if(data.length===0){
+  html="<p>No orders yet</p>";
+}
 
-  document.getElementById("orders").innerHTML=html;
+data.forEach(o=>{
+html+=`
+<div style="border:1px solid #ccc; padding:10px; margin:10px;">
+<b>Order ID:</b> ${o.id}<br>
+<b>Status:</b> ${o.status}<br>
+<b>Date:</b> ${o.date}<br>
+<b>Items:</b>
+<ul>
+${o.items.map(i=>`<li>${i.name} x ${i.qty}</li>`).join("")}
+</ul>
+</div>
+`;
+});
+
+document.getElementById("orders").innerHTML=html;
 
 });
 
