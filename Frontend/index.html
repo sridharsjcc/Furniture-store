@@ -166,8 +166,9 @@ html+=`
 <p>₹${p.price}</p>
 <button onclick='event.stopPropagation(); add(${JSON.stringify(p)})'>Add to Cart</button>
 </div>`;
-});
-
+function goProduct(id){
+  window.location.href = "product.html?id=" + id;
+}
 products.innerHTML=html;
 
 });
