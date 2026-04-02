@@ -94,8 +94,7 @@ name.innerText=p.name;
 price.innerText="₹"+p.price;
 desc.innerText=p.description;
 
-mainImg.src=p.images[0];
-
+mainImg.src = p.images?.[0] || "https://via.placeholder.com/400";
 let thumbsHTML="";
 p.images.forEach(img=>{
 thumbsHTML+=`<img src="${img}" onclick="change('${img}')">`;
