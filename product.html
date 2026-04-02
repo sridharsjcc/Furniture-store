@@ -88,26 +88,43 @@ fetch(BASE+"/product/"+id)
 .then(res=>res.json())
 .then(p=>{
 
-product=p;
-
-name.innerText=p.name;
-price.innerText="₹"+p.price;
-desc.innerText=p.description;
-
-mainImg.src = p.images?.[0] || "https://via.placeholder.com/400";
-let thumbsHTML="";
-p.images.forEach(img=>{
-thumbsHTML+=`<img src="${img}" onclick="change('${img}')">`;
-});
-
-thumbs.innerHTML=thumbsHTML;
-
-});
-
-function change(src){
-mainImg.src=src;
+// ❌ if product not found
+if(!p || !p.id){
+  document.body.innerHTML="<h2 style='padding:40px'>Product not found ❌</h2>";
+  return;
 }
 
+product=p;
+
+// ✅ SET DATA
+document.getElementById("name").innerText=p.name;
+document.getElementById("price").innerText="₹"+p.price;
+document.getElementById("desc").innerText=p.description || "";
+
+// ✅ IMAGE FIX
+const main = document.getElementById("mainImg");
+const thumbsDiv = document.getElementById("thumbs");
+
+const imgs = p.images && p.images.length ? p.images : [p.image || "https://via.placeholder.com/400"];
+
+main.src = imgs[0];
+
+// ✅ SAFE LOOP
+let thumbsHTML="";
+imgs.forEach(img=>{
+  thumbsHTML += `<img src="${img}" onclick="change('${img}')">`;
+});
+
+thumbsDiv.innerHTML = thumbsHTML;
+
+});
+
+// CHANGE IMAGE
+function change(src){
+document.getElementById("mainImg").src=src;
+}
+
+// ADD TO CART
 function add(){
 
 if(!token){
@@ -123,7 +140,10 @@ headers:{
 },
 body:JSON.stringify({product})
 })
-.then(()=>alert("Added to cart 🛒"));
+.then(res=>res.text())
+.then(msg=>{
+alert(msg);
+});
 
 }
 
