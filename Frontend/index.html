@@ -138,40 +138,46 @@ function logout(){
   location.reload();
 }
 
-// ===== OPEN PRODUCT PAGE =====
-function openProduct(id){
+// ===== OPEN PRODUCT =====
+function goProduct(id){
   window.location.href = "product.html?id=" + id;
 }
 
 // ===== LOAD PRODUCTS =====
 function load(){
+
 fetch(BASE+"/products")
 .then(r=>r.json())
 .then(data=>{
 
 let s = search.value.toLowerCase();
-
 let html="";
 
 data
 .filter(p => p.name.toLowerCase().includes(s))
 .forEach(p=>{
 
-const img = p.images ? p.images[0] : (p.image || "https://via.placeholder.com/150");
-
 html+=`
 <div class="card" onclick="goProduct(${p.id})">
-<img src="${p.images?.[0] || 'https://via.placeholder.com/150'}">
+<img src="${p.images?.[0] || p.image || 'https://via.placeholder.com/150'}">
 <h3>${p.name}</h3>
 <p>₹${p.price}</p>
-<button onclick='event.stopPropagation(); add(${JSON.stringify(p)})'>Add to Cart</button>
+
+<button onclick='event.stopPropagation(); add(${JSON.stringify(p)})'>
+Add to Cart
+</button>
+
 </div>`;
-function goProduct(id){
-  window.location.href = "product.html?id=" + id;
-}
-products.innerHTML=html;
 
 });
+
+products.innerHTML = html;
+
+})
+.catch(()=>{
+products.innerHTML = "<h2>Failed to load products ❌</h2>";
+});
+
 }
 
 // ===== ADD TO CART =====
@@ -197,7 +203,7 @@ updateCartCount();
 
 }
 
-// ===== CART COUNT (FIXED) =====
+// ===== CART COUNT =====
 function updateCartCount(){
 
 if(!token) return;
@@ -222,6 +228,7 @@ const el=document.getElementById("count");
 if(el) el.innerText = totalQty;
 
 });
+
 }
 
 // ===== INIT =====
