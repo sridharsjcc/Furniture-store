@@ -1,26 +1,40 @@
 <!DOCTYPE html>
 <html>
+<head>
+<title>Checkout</title>
+
+<style>
+body{
+  font-family:Arial;
+  text-align:center;
+  margin-top:100px;
+}
+
+button{
+  padding:15px 25px;
+  font-size:18px;
+  background:orange;
+  border:none;
+  cursor:pointer;
+}
+</style>
+
+</head>
+
 <body>
 
 <h2>🧾 Checkout</h2>
 
 <button onclick="order()">Place Order</button>
-<br><br>
-<a href="index.html">⬅ Back to Home</a>
 
 <script>
 
-const BASE = "https://furniturebackend-adua.onrender.com";
-const token = localStorage.getItem("token");
+const BASE="https://furniturebackend-adua.onrender.com";
+const token=localStorage.getItem("token");
 
 function order(){
 
-if(!token){
-  alert("Login first ❌");
-  return;
-}
-
-fetch(BASE + "/place-order",{
+fetch(BASE+"/place-order",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
@@ -29,8 +43,12 @@ headers:{
 })
 .then(res=>res.text())
 .then(msg=>{
-  alert(msg);
+alert(msg);
+
+if(msg.includes("✅")){
   window.location.href="orders.html";
+}
+
 });
 
 }
