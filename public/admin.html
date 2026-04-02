@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+
+<style>
+body{font-family:Arial;margin:0;background:#f1f3f6;}
+
+.header{
+  background:#131921;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.header a{
+  color:white;
+  text-decoration:none;
+  margin-left:15px;
+}
+
+.container{padding:20px;}
+
+.box{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+}
+
+button{
+  padding:10px;
+  width:100%;
+  margin-top:5px;
+  cursor:pointer;
+}
+
+.products{margin-top:30px;}
+
+.card{
+  background:white;
+  padding:10px;
+  margin:10px 0;
+  border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>👑 Admin Panel</h2>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="box">
+<h3>Add Product</h3>
+
+<input id="name" placeholder="Product name">
+<input id="price" placeholder="Price">
+<input id="image" placeholder="Image URL">
+
+<button onclick="addProduct()">Add Product</button>
+</div>
+
+<div class="products">
+<h3>All Products</h3>
+<div id="list"></div>
+</div>
+
+</div>
+
+<script>
+
+const BASE="https://furniturebackend-adua.onrender.com";
+const token=localStorage.getItem("token");
+
+// 🔐 CHECK ADMIN
+function getUser(){
+  try{
+    return JSON.parse(atob(token.split('.')[1]));
+  }catch{
+    return null;
+  }
+}
+
+const user=getUser();
+
+if(!token || !user || !user.isAdmin){
+  alert("Admin only ❌");
+  location.href="index.html";
+}
+
+// LOGOUT
+function logout(){
+  localStorage.removeItem("token");
+  location.href="index.html";
+}
+
+// ADD PRODUCT
+function addProduct(){
+
+fetch(BASE+"/add-product",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":token
+},
+body:JSON.stringify({
+name:name.value,
+price:Number(price.value),
+image:image.value
+})
+})
+.then(res=>res.text())
+.then(msg=>{
+alert(msg);
+load();
+});
+
+}
+
+// LOAD PRODUCTS
+function load(){
+
+fetch(BASE+"/products")
+.then(res=>res.json())
+.then(data=>{
+
+let html="";
+
+data.forEach(p=>{
+html+=`
+<div class="card">
+<img src="${p.image || 'https://images.unsplash.com/photo-1505691938895-1758d7feb511'}" width="100"><br>
+<b>${p.name}</b><br>
+₹${p.price}
+</div>`;
+});
+
+list.innerHTML=html;
+
+});
+
+}
+
+load();
+
+</script>
+
+</body>
+</html>
