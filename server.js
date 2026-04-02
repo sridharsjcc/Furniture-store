@@ -137,54 +137,67 @@ app.post("/delete-product",auth,(req,res)=>{
   res.send("Deleted 🗑️");
 });
 
-// ===== CART =====
+// ===== CART (🔥 FIXED) =====
 
 app.post("/add-to-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   const product = req.body.product;
+
+  if(!user || !product) return res.send("Error ❌");
 
   let item = user.cart.find(i=>i.id===product.id);
 
   if(item){
     item.qty++;
   } else {
-    user.cart.push({...product, qty:1});
+    user.cart.push({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images ? product.images[0] : product.image,
+      qty: 1
+    });
   }
 
   saveUsers();
   res.send("Added 🛒");
 });
 
+// GET CART
 app.post("/get-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
-  res.send(user.cart);
+  res.send(user.cart || []);
 });
 
+// INCREASE
 app.post("/inc",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   let item = user.cart.find(i=>i.id===req.body.id);
   if(item) item.qty++;
   saveUsers();
-  res.send("Updated");
+  res.send("Updated ➕");
 });
 
+// DECREASE
 app.post("/dec",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   let item = user.cart.find(i=>i.id===req.body.id);
   if(item && item.qty>1) item.qty--;
   saveUsers();
-  res.send("Updated");
+  res.send("Updated ➖");
 });
 
+// REMOVE
 app.post("/remove",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   user.cart = user.cart.filter(i=>i.id!==req.body.id);
   saveUsers();
-  res.send("Removed");
+  res.send("Removed ❌");
 });
 
 // ===== ORDERS =====
 
+// PLACE ORDER
 app.post("/place-order", auth, (req,res)=>{
 
   const user = users.find(u=>u.username===req.user.username);
@@ -211,10 +224,12 @@ app.post("/place-order", auth, (req,res)=>{
   res.send("Order placed ✅");
 });
 
+// USER ORDERS
 app.get("/my-orders", auth, (req,res)=>{
   res.send(orders.filter(o=>o.username===req.user.username));
 });
 
+// ADMIN ORDERS
 app.get("/all-orders", auth, (req,res)=>{
   if(!req.user.isAdmin) return res.send("Admin only ❌");
   res.send(orders);
