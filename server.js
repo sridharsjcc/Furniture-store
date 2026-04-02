@@ -236,7 +236,9 @@ app.get("/all-orders", auth, (req,res)=>{
 });
 
 // ===== SERVER =====
-app.get("/",(req,res)=>res.send("Backend Running 🚀"));
+app.get("/",(req,res)=>{
+  res.sendFile(__dirname + "/public/index.html");
+});
 
 app.listen(process.env.PORT || 3000,()=>{
   console.log("🚀 Server running");
