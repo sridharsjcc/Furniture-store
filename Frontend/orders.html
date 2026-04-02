@@ -4,21 +4,14 @@
 
 <h2>📦 My Orders</h2>
 
-<a href="index.html">⬅ Home</a>
-
 <div id="orders"></div>
 
 <script>
 
-const BASE = "https://furniturebackend-adua.onrender.com";
-const token = localStorage.getItem("token");
+const BASE="https://furniturebackend-adua.onrender.com";
+const token=localStorage.getItem("token");
 
-if(!token){
-  alert("Login first ❌");
-  location.href="login.html";
-}
-
-fetch(BASE + "/my-orders",{
+fetch(BASE+"/my-orders",{
 headers:{"Authorization":token}
 })
 .then(res=>res.json())
@@ -26,25 +19,18 @@ headers:{"Authorization":token}
 
 let html="";
 
-if(data.length===0){
-  html="<p>No orders yet</p>";
-}
-
 data.forEach(o=>{
 html+=`
 <div style="border:1px solid #ccc; padding:10px; margin:10px;">
-<b>Order ID:</b> ${o.id}<br>
-<b>Status:</b> ${o.status}<br>
-<b>Date:</b> ${o.date}<br>
-<b>Items:</b>
-<ul>
-${o.items.map(i=>`<li>${i.name} x ${i.qty}</li>`).join("")}
-</ul>
+<b>Order ID:</b> ${o.id} <br>
+<b>Total:</b> ₹${o.total} <br>
+<b>Status:</b> ${o.status} <br>
+<b>Date:</b> ${o.date}
 </div>
 `;
 });
 
-document.getElementById("orders").innerHTML=html;
+orders.innerHTML=html;
 
 });
 
