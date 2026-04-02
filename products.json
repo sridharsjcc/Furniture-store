@@ -3,24 +3,21 @@
     "id": 1,
     "name": "Luxury Sofa",
     "price": 45000,
-    "image": "https://images.unsplash.com/photo-1582582429416-1f0d9c9b4f2e"
+    "images": [
+      "https://images.unsplash.com/photo-1582582429416-1f0d9c9b4f2e",
+      "https://images.unsplash.com/photo-1567016432779-094069958ea5",
+      "https://images.unsplash.com/photo-1505691938895-1758d7feb511"
+    ],
+    "description": "Premium luxury sofa with high comfort and modern design."
   },
   {
     "id": 2,
     "name": "Modern Chair",
     "price": 8000,
-    "image": "https://images.unsplash.com/photo-1567016549635-8f6e0e7e9f0c"
-  },
-  {
-    "id": 3,
-    "name": "Wooden Table",
-    "price": 15000,
-    "image": "https://images.unsplash.com/photo-1505691938895-1758d7feb511"
-  },
-  {
-    "id": 4,
-    "name": "King Size Bed",
-    "price": 55000,
-    "image": "https://images.unsplash.com/photo-1585559605295-3e1b3fdb0f2c"
+    "images": [
+      "https://images.unsplash.com/photo-1503602642458-232111445657",
+      "https://images.unsplash.com/photo-1519710164239-da123dc03ef4"
+    ],
+    "description": "Ergonomic chair perfect for home and office."
   }
 ]
