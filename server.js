@@ -3,11 +3,15 @@ const cors = require("cors");
 const fs = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const path = require("path");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// ✅ SERVE FRONTEND (VERY IMPORTANT)
+app.use(express.static(path.join(__dirname, "public")));
 
 const SECRET = "secret123";
 
@@ -98,12 +102,10 @@ function auth(req,res,next){
 
 // ===== PRODUCTS =====
 
-// GET ALL
 app.get("/products",(req,res)=>{
   res.send(products);
 });
 
-// GET SINGLE
 app.get("/product/:id",(req,res)=>{
   const product = products.find(p=>p.id==req.params.id);
   res.send(product || {});
@@ -111,7 +113,6 @@ app.get("/product/:id",(req,res)=>{
 
 // ===== CART =====
 
-// ADD TO CART (FIXED)
 app.post("/add-to-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   const product = req.body.product;
@@ -136,13 +137,11 @@ app.post("/add-to-cart",auth,(req,res)=>{
   res.send("Added 🛒");
 });
 
-// GET CART
 app.post("/get-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   res.send(user.cart || []);
 });
 
-// INCREASE
 app.post("/inc",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   let item = user.cart.find(i=>i.id===req.body.id);
@@ -151,7 +150,6 @@ app.post("/inc",auth,(req,res)=>{
   res.send("Updated ➕");
 });
 
-// DECREASE
 app.post("/dec",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   let item = user.cart.find(i=>i.id===req.body.id);
@@ -160,7 +158,6 @@ app.post("/dec",auth,(req,res)=>{
   res.send("Updated ➖");
 });
 
-// REMOVE
 app.post("/remove",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   user.cart = user.cart.filter(i=>i.id!==req.body.id);
@@ -170,7 +167,6 @@ app.post("/remove",auth,(req,res)=>{
 
 // ===== ORDERS =====
 
-// PLACE ORDER
 app.post("/place-order", auth, (req,res)=>{
 
   const user = users.find(u=>u.username===req.user.username);
@@ -197,21 +193,21 @@ app.post("/place-order", auth, (req,res)=>{
   res.send("Order placed ✅");
 });
 
-// USER ORDERS
 app.get("/my-orders", auth, (req,res)=>{
   res.send(orders.filter(o=>o.username===req.user.username));
 });
 
-// ADMIN ORDERS
 app.get("/all-orders", auth, (req,res)=>{
   if(!req.user.isAdmin) return res.send("Admin only ❌");
   res.send(orders);
 });
 
-// ===== HEALTH =====
-app.get("/",(req,res)=>res.send("Backend Running 🚀"));
+// ===== FRONTEND FALLBACK (VERY IMPORTANT) =====
+app.get("*",(req,res)=>{
+  res.sendFile(path.join(__dirname,"public","index.html"));
+});
 
-// ===== START SERVER =====
+// ===== SERVER =====
 app.listen(process.env.PORT || 3000,()=>{
   console.log("🚀 Server running");
 });
