@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Product</title>
+
+<style>
+body{
+  font-family:Arial;
+  margin:0;
+  background:#f1f3f6;
+}
+
+.header{
+  background:#131921;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.container{
+  display:flex;
+  gap:40px;
+  padding:40px;
+}
+
+.left img{
+  width:400px;
+  border-radius:10px;
+}
+
+.thumbs img{
+  width:80px;
+  margin:5px;
+  cursor:pointer;
+}
+
+.right{
+  max-width:400px;
+}
+
+button{
+  padding:12px 20px;
+  background:orange;
+  border:none;
+  cursor:pointer;
+  margin-top:20px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+<h2>🛒 Furniture Store</h2>
+<a href="index.html" style="color:white;">Home</a>
+</div>
+
+<div class="container">
+
+<div class="left">
+<img id="mainImg">
+<div class="thumbs" id="thumbs"></div>
+</div>
+
+<div class="right">
+<h2 id="name"></h2>
+<h3 id="price"></h3>
+<p id="desc"></p>
+
+<button onclick="add()">Add to Cart</button>
+</div>
+
+</div>
+
+<script>
+
+const BASE="https://furniturebackend-adua.onrender.com";
+const token=localStorage.getItem("token");
+
+const params=new URLSearchParams(window.location.search);
+const id=params.get("id");
+
+let product={};
+
+fetch(BASE+"/product/"+id)
+.then(res=>res.json())
+.then(p=>{
+
+product=p;
+
+name.innerText=p.name;
+price.innerText="₹"+p.price;
+desc.innerText=p.description;
+
+mainImg.src=p.images[0];
+
+let thumbsHTML="";
+p.images.forEach(img=>{
+thumbsHTML+=`<img src="${img}" onclick="change('${img}')">`;
+});
+
+thumbs.innerHTML=thumbsHTML;
+
+});
+
+function change(src){
+mainImg.src=src;
+}
+
+function add(){
+
+if(!token){
+alert("Login first ❗");
+return;
+}
+
+fetch(BASE+"/add-to-cart",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":token
+},
+body:JSON.stringify({product})
+})
+.then(()=>alert("Added to cart 🛒"));
+
+}
+
+</script>
+
+</body>
+</html>
