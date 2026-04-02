@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>📦 My Orders</h2>
+
+<div id="orders"></div>
+
+<script>
+
+const BASE="https://furniturebackend-adua.onrender.com";
+const token=localStorage.getItem("token");
+
+fetch(BASE+"/my-orders",{
+headers:{"Authorization":token}
+})
+.then(res=>res.json())
+.then(data=>{
+
+let html="";
+
+data.forEach(o=>{
+html+=`
+<div style="border:1px solid #ccc; padding:10px; margin:10px;">
+<b>Order ID:</b> ${o.id} <br>
+<b>Total:</b> ₹${o.total} <br>
+<b>Status:</b> ${o.status} <br>
+<b>Date:</b> ${o.date}
+</div>
+`;
+});
+
+orders.innerHTML=html;
+
+});
+
+</script>
+
+</body>
+</html>

@@ -16,7 +16,11 @@
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+<<<<<<< HEAD
     "mongoose": "^9.3.2",
     "razorpay": "^2.9.6"
+=======
+    "mongoose": "^9.3.2"
+>>>>>>> afa329c5066422dd056c200fa5391c97a6042237
   }
 }
