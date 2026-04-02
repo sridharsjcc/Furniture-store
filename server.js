@@ -11,22 +11,30 @@ app.use(express.json());
 
 const SECRET = "secret123";
 
-// ===== LOAD DATA =====
-let users = JSON.parse(fs.readFileSync("users.json", "utf-8"));
-let products = JSON.parse(fs.readFileSync("products.json", "utf-8"));
+// ✅ SAFE LOAD FUNCTION
+function loadJSON(file){
+  try{
+    const data = fs.readFileSync(file,"utf-8");
+    return data ? JSON.parse(data) : [];
+  }catch{
+    return [];
+  }
+}
 
-// ===== SAVE FUNCTIONS =====
+let users = loadJSON("users.json");
+let products = loadJSON("products.json");
+
+// SAVE
 function saveUsers(){
-  fs.writeFileSync("users.json", JSON.stringify(users, null, 2));
+  fs.writeFileSync("users.json", JSON.stringify(users,null,2));
 }
 
 function saveProducts(){
-  fs.writeFileSync("products.json", JSON.stringify(products, null, 2));
+  fs.writeFileSync("products.json", JSON.stringify(products,null,2));
 }
 
 // ===== AUTH =====
 
-// SIGNUP
 app.post("/signup", async (req,res)=>{
   const {username,password} = req.body;
 
@@ -47,7 +55,6 @@ app.post("/signup", async (req,res)=>{
   res.send("Signup success ✅");
 });
 
-// LOGIN
 app.post("/login", async (req,res)=>{
   const {username,password} = req.body;
 
@@ -65,7 +72,7 @@ app.post("/login", async (req,res)=>{
   res.send({token});
 });
 
-// AUTH MIDDLEWARE
+// AUTH
 function auth(req,res,next){
   try{
     const data = jwt.verify(req.headers.authorization,SECRET);
@@ -76,8 +83,7 @@ function auth(req,res,next){
   }
 }
 
-// ===== PRODUCTS =====
-
+// PRODUCTS
 app.get("/products",(req,res)=>{
   res.send(products);
 });
@@ -98,9 +104,7 @@ app.post("/add-product",auth,(req,res)=>{
   res.send("Product added ✅");
 });
 
-// ===== CART =====
-
-// ADD TO CART (with qty)
+// CART
 app.post("/add-to-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   const product = req.body.product;
@@ -108,65 +112,46 @@ app.post("/add-to-cart",auth,(req,res)=>{
   let item = user.cart.find(i=>i.id===product.id);
 
   if(item){
-    item.qty += 1;
+    item.qty++;
   } else {
     user.cart.push({...product, qty:1});
   }
 
   saveUsers();
-  res.send("Added to cart 🛒");
+  res.send("Added 🛒");
 });
 
-// GET CART
 app.post("/get-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   res.send(user.cart);
 });
 
-// INCREASE QTY
 app.post("/inc",auth,(req,res)=>{
-  const {id} = req.body;
   const user = users.find(u=>u.username===req.user.username);
-
-  let item = user.cart.find(i=>i.id===id);
+  const item = user.cart.find(i=>i.id===req.body.id);
   if(item) item.qty++;
-
   saveUsers();
-  res.send("Increased ➕");
+  res.send("Updated");
 });
 
-// DECREASE QTY
 app.post("/dec",auth,(req,res)=>{
-  const {id} = req.body;
   const user = users.find(u=>u.username===req.user.username);
-
-  let item = user.cart.find(i=>i.id===id);
-
-  if(item && item.qty > 1){
-    item.qty--;
-  }
-
+  const item = user.cart.find(i=>i.id===req.body.id);
+  if(item && item.qty>1) item.qty--;
   saveUsers();
-  res.send("Decreased ➖");
+  res.send("Updated");
 });
 
-// REMOVE ITEM
 app.post("/remove",auth,(req,res)=>{
-  const {id} = req.body;
   const user = users.find(u=>u.username===req.user.username);
-
-  user.cart = user.cart.filter(i=>i.id !== id);
-
+  user.cart = user.cart.filter(i=>i.id!==req.body.id);
   saveUsers();
-  res.send("Removed ❌");
+  res.send("Removed");
 });
 
-// ===== SERVER =====
-
+// HEALTH
 app.get("/",(req,res)=>res.send("Backend Running 🚀"));
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, ()=>{
-  console.log("🚀 Server running on port " + PORT);
+app.listen(process.env.PORT || 3000,()=>{
+  console.log("🚀 Server running");
 });
