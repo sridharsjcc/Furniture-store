@@ -45,6 +45,10 @@ function saveOrders(){
 app.post("/signup", async (req,res)=>{
   const {username,password} = req.body;
 
+  if(!username || !password){
+    return res.status(400).send("Missing fields ❌");
+  }
+
   if(users.find(u=>u.username===username)){
     return res.send("User exists ❌");
   }
@@ -67,56 +71,84 @@ app.post("/login", async (req,res)=>{
   const {username,password} = req.body;
 
   const user = users.find(u=>u.username===username);
-  if(!user) return res.send("Invalid ❌");
+  if(!user) return res.status(401).send("Invalid ❌");
 
   const match = await bcrypt.compare(password,user.password);
-  if(!match) return res.send("Invalid ❌");
+  if(!match) return res.status(401).send("Invalid ❌");
 
   const token = jwt.sign(
     {username:user.username, isAdmin:user.isAdmin},
     SECRET
   );
 
-  res.send({token});
+  res.send({
+    token,
+    username:user.username,
+    isAdmin:user.isAdmin
+  });
 });
 
 // AUTH MIDDLEWARE
 function auth(req,res,next){
   try{
-    const data = jwt.verify(req.headers.authorization,SECRET);
+    const token = req.headers.authorization;
+    if(!token) return res.status(401).send("No token ❌");
+
+    const data = jwt.verify(token,SECRET);
     req.user = data;
     next();
   }catch{
-    res.send("Unauthorized ❌");
+    res.status(401).send("Unauthorized ❌");
   }
 }
 
 // ===== PRODUCTS =====
 
+// GET PRODUCTS
 app.get("/products",(req,res)=>{
   res.send(products);
 });
 
+// ADD PRODUCT (ADMIN)
 app.post("/add-product",auth,(req,res)=>{
   if(!req.user.isAdmin) return res.send("Admin only ❌");
 
   const {name,price,image} = req.body;
 
+  if(!name || !price){
+    return res.send("Missing fields ❌");
+  }
+
   products.push({
     id:Date.now(),
     name,
     price,
-    image
+    image: image || "https://via.placeholder.com/150"
   });
 
   saveProducts();
   res.send("Product added ✅");
 });
 
+// DELETE PRODUCT (ADMIN)
+app.post("/delete-product",auth,(req,res)=>{
+  if(!req.user.isAdmin) return res.send("Admin only ❌");
+
+  const {id} = req.body;
+
+  products = products.filter(p=>p.id !== id);
+
+  saveProducts();
+  res.send("Deleted 🗑️");
+});
+
 // ===== CART =====
 
+// ADD TO CART
 app.post("/add-to-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
+  if(!user) return res.send("User not found ❌");
+
   const product = req.body.product;
 
   let item = user.cart.find(i=>i.id===product.id);
@@ -131,35 +163,47 @@ app.post("/add-to-cart",auth,(req,res)=>{
   res.send("Added 🛒");
 });
 
+// GET CART
 app.post("/get-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   res.send(user.cart);
 });
 
+// INCREASE QTY
 app.post("/inc",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   const item = user.cart.find(i=>i.id===req.body.id);
+
   if(item) item.qty++;
+
   saveUsers();
-  res.send("Updated");
+  res.send("Updated ➕");
 });
 
+// DECREASE QTY
 app.post("/dec",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   const item = user.cart.find(i=>i.id===req.body.id);
-  if(item && item.qty>1) item.qty--;
+
+  if(item && item.qty > 1){
+    item.qty--;
+  }
+
   saveUsers();
-  res.send("Updated");
+  res.send("Updated ➖");
 });
 
+// REMOVE ITEM
 app.post("/remove",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
-  user.cart = user.cart.filter(i=>i.id!==req.body.id);
+
+  user.cart = user.cart.filter(i=>i.id !== req.body.id);
+
   saveUsers();
-  res.send("Removed");
+  res.send("Removed ❌");
 });
 
-// ===== 🧾 ORDERS / CHECKOUT =====
+// ===== ORDERS =====
 
 // PLACE ORDER
 app.post("/place-order", auth, (req,res)=>{
@@ -181,7 +225,7 @@ app.post("/place-order", auth, (req,res)=>{
 
   orders.push(order);
 
-  user.cart = []; // clear cart
+  user.cart = [];
 
   saveUsers();
   saveOrders();
@@ -189,15 +233,24 @@ app.post("/place-order", auth, (req,res)=>{
   res.send("Order placed ✅");
 });
 
-// GET USER ORDERS
+// USER ORDERS
 app.get("/my-orders", auth, (req,res)=>{
   const userOrders = orders.filter(o=>o.username===req.user.username);
   res.send(userOrders);
 });
 
+// ADMIN ALL ORDERS
+app.get("/all-orders", auth, (req,res)=>{
+  if(!req.user.isAdmin){
+    return res.send("Admin only ❌");
+  }
+  res.send(orders);
+});
+
 // ===== HEALTH =====
 app.get("/",(req,res)=>res.send("Backend Running 🚀"));
 
+// ===== START SERVER =====
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT,()=>{
