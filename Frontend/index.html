@@ -4,7 +4,11 @@
 <title>Furniture Store</title>
 
 <style>
-body{font-family:Arial;margin:0;background:#f1f3f6;}
+body{
+  font-family:Arial;
+  margin:0;
+  background:#f1f3f6;
+}
 
 .header{
   background:#131921;
@@ -46,6 +50,12 @@ body{font-family:Arial;margin:0;background:#f1f3f6;}
   padding:15px;
   border-radius:10px;
   text-align:center;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.card:hover{
+  transform:scale(1.02);
 }
 
 .card img{
@@ -75,7 +85,6 @@ button{
 
 <div class="header">
   <h2>🛒 Furniture Store</h2>
-
   <div id="nav"></div>
 </div>
 
@@ -92,17 +101,16 @@ button{
 const BASE="https://furniturebackend-adua.onrender.com";
 const token=localStorage.getItem("token");
 
-// 🔐 GET USER FROM TOKEN
+// ===== GET USER =====
 function getUser(){
   try{
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload;
+    return JSON.parse(atob(token.split('.')[1]));
   }catch{
     return null;
   }
 }
 
-// 🧠 NAVBAR LOGIC
+// ===== NAV =====
 function renderNav(){
 
 let html = `<a href="index.html">Home</a>`;
@@ -112,7 +120,6 @@ if(!token){
 }else{
 
   html += `<a href="#" onclick="logout()">Logout</a>`;
-
   html += `<a href="cart.html">Cart <span id="count" class="cart-count">0</span></a>`;
 
   const user = getUser();
@@ -123,16 +130,20 @@ if(!token){
 }
 
 nav.innerHTML = html;
-
 }
 
-// LOGOUT
+// ===== LOGOUT =====
 function logout(){
   localStorage.removeItem("token");
   location.reload();
 }
 
-// LOAD PRODUCTS
+// ===== OPEN PRODUCT PAGE =====
+function openProduct(id){
+  window.location.href = "product.html?id=" + id;
+}
+
+// ===== LOAD PRODUCTS =====
 function load(){
 fetch(BASE+"/products")
 .then(r=>r.json())
@@ -146,12 +157,20 @@ data
 .filter(p => p.name.toLowerCase().includes(s))
 .forEach(p=>{
 
+const img = p.images ? p.images[0] : (p.image || "https://via.placeholder.com/150");
+
 html+=`
-<div class="card">
-<img src="${p.image || 'https://images.unsplash.com/photo-1505691938895-1758d7feb511'}">
+<div class="card" onclick="openProduct(${p.id})">
+
+<img src="${img}">
+
 <h3>${p.name}</h3>
 <p>₹${p.price}</p>
-<button onclick='add(${JSON.stringify(p)})'>Add to Cart</button>
+
+<button onclick='event.stopPropagation(); add(${JSON.stringify(p)})'>
+Add to Cart
+</button>
+
 </div>`;
 });
 
@@ -160,7 +179,7 @@ products.innerHTML=html;
 });
 }
 
-// ADD TO CART
+// ===== ADD TO CART =====
 function add(p){
 
 if(!token){
@@ -176,11 +195,14 @@ headers:{
 },
 body:JSON.stringify({product:p})
 })
-.then(()=>updateCartCount());
+.then(()=>{
+alert("Added to cart 🛒");
+updateCartCount();
+});
 
 }
 
-// CART COUNT
+// ===== CART COUNT (FIXED) =====
 function updateCartCount(){
 
 if(!token) return;
@@ -194,12 +216,20 @@ headers:{
 })
 .then(res=>res.json())
 .then(data=>{
-const el=document.getElementById("count");
-if(el) el.innerText = data.length;
+
+let totalQty = 0;
+
+data.forEach(i=>{
+  totalQty += i.qty;
 });
 
+const el=document.getElementById("count");
+if(el) el.innerText = totalQty;
+
+});
 }
 
+// ===== INIT =====
 renderNav();
 load();
 updateCartCount();
