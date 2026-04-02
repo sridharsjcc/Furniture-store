@@ -1,40 +1,26 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Checkout</title>
-
-<style>
-body{font-family:Arial;background:#f1f3f6;padding:40px;}
-.box{background:white;padding:20px;border-radius:10px;width:300px;margin:auto;}
-button{width:100%;padding:10px;background:orange;border:none;}
-</style>
-</head>
-
 <body>
 
-<div class="box">
+<h2>🧾 Checkout</h2>
 
-<h2>Checkout</h2>
-
-<input id="address" placeholder="Address"><br><br>
-
-<select id="payment">
-<option>UPI</option>
-<option>Card</option>
-<option>Cash</option>
-</select><br><br>
-
-<button onclick="placeOrder()">Place Order</button>
-
-</div>
+<button onclick="order()">Place Order</button>
+<br><br>
+<a href="index.html">⬅ Back to Home</a>
 
 <script>
 
-const token=localStorage.getItem("token");
+const BASE = "https://furniturebackend-adua.onrender.com";
+const token = localStorage.getItem("token");
 
-function placeOrder(){
+function order(){
 
-fetch("http://localhost:3000/place-order",{
+if(!token){
+  alert("Login first ❌");
+  return;
+}
+
+fetch(BASE + "/place-order",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
@@ -43,9 +29,10 @@ headers:{
 })
 .then(res=>res.text())
 .then(msg=>{
-alert(msg);
-window.location.href="orders.html";
+  alert(msg);
+  window.location.href="orders.html";
 });
+
 }
 
 </script>
