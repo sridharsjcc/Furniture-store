@@ -4,13 +4,8 @@
 <title>Furniture Store</title>
 
 <style>
-body{
-  font-family: Arial;
-  margin:0;
-  background:#f1f3f6;
-}
+body{font-family:Arial;margin:0;background:#f1f3f6;}
 
-/* HEADER */
 .header{
   background:#131921;
   color:white;
@@ -26,7 +21,6 @@ body{
   margin-left:15px;
 }
 
-/* SEARCH */
 .search-box{
   margin:20px;
   text-align:center;
@@ -37,7 +31,6 @@ body{
   padding:10px;
 }
 
-/* PRODUCTS */
 .container{
   padding:20px;
 }
@@ -53,14 +46,12 @@ body{
   padding:15px;
   border-radius:10px;
   text-align:center;
-  box-shadow:0 0 5px #ccc;
 }
 
 .card img{
   width:100%;
   height:150px;
   object-fit:cover;
-  border-radius:8px;
 }
 
 button{
@@ -71,7 +62,6 @@ button{
   margin-top:10px;
 }
 
-/* CART COUNT */
 .cart-count{
   background:red;
   padding:3px 8px;
@@ -86,16 +76,11 @@ button{
 <div class="header">
   <h2>🛒 Furniture Store</h2>
 
-  <div>
-    <a href="index.html">Home</a>
-    <a href="login.html">Login</a>
-    <a href="cart.html">Cart <span id="count" class="cart-count">0</span></a>
-    <a href="admin.html">Admin</a>
-  </div>
+  <div id="nav"></div>
 </div>
 
 <div class="search-box">
-  <input id="search" placeholder="Search furniture..." onkeyup="load()">
+  <input id="search" placeholder="Search..." onkeyup="load()">
 </div>
 
 <div class="container">
@@ -107,6 +92,46 @@ button{
 const BASE="https://furniturebackend-adua.onrender.com";
 const token=localStorage.getItem("token");
 
+// 🔐 GET USER FROM TOKEN
+function getUser(){
+  try{
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload;
+  }catch{
+    return null;
+  }
+}
+
+// 🧠 NAVBAR LOGIC
+function renderNav(){
+
+let html = `<a href="index.html">Home</a>`;
+
+if(!token){
+  html += `<a href="login.html">Login</a>`;
+}else{
+
+  html += `<a href="#" onclick="logout()">Logout</a>`;
+
+  html += `<a href="cart.html">Cart <span id="count" class="cart-count">0</span></a>`;
+
+  const user = getUser();
+
+  if(user && user.isAdmin){
+    html += `<a href="admin.html">Admin</a>`;
+  }
+}
+
+nav.innerHTML = html;
+
+}
+
+// LOGOUT
+function logout(){
+  localStorage.removeItem("token");
+  location.reload();
+}
+
 // LOAD PRODUCTS
 function load(){
 fetch(BASE+"/products")
@@ -116,6 +141,7 @@ fetch(BASE+"/products")
 let s = search.value.toLowerCase();
 
 let html="";
+
 data
 .filter(p => p.name.toLowerCase().includes(s))
 .forEach(p=>{
@@ -150,11 +176,7 @@ headers:{
 },
 body:JSON.stringify({product:p})
 })
-.then(res=>res.text())
-.then(()=>{
-alert("Added to cart ✅");
-updateCartCount();
-});
+.then(()=>updateCartCount());
 
 }
 
@@ -172,11 +194,13 @@ headers:{
 })
 .then(res=>res.json())
 .then(data=>{
-document.getElementById("count").innerText = data.length;
+const el=document.getElementById("count");
+if(el) el.innerText = data.length;
 });
 
 }
 
+renderNav();
 load();
 updateCartCount();
 
