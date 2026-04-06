@@ -1,5 +1,36 @@
 <!DOCTYPE html>
 <html>
+<head>
+<title>My Orders</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f1f3f6;
+  padding:20px;
+}
+
+.order{
+  background:white;
+  padding:15px;
+  margin:15px 0;
+  border-radius:10px;
+}
+
+.item{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+.item img{
+  width:80px;
+  height:60px;
+  object-fit:cover;
+}
+</style>
+</head>
+
 <body>
 
 <h2>📦 My Orders</h2>
@@ -11,27 +42,59 @@
 const BASE="https://furniturebackend-adua.onrender.com";
 const token=localStorage.getItem("token");
 
+if(!token){
+  alert("Login first ❗");
+  location.href="login.html";
+}
+
 fetch(BASE+"/my-orders",{
-headers:{"Authorization":token}
+headers:{
+"Authorization": token
+}
 })
 .then(res=>res.json())
 .then(data=>{
 
+if(!data.length){
+orders.innerHTML="<h3>No orders yet ❌</h3>";
+return;
+}
+
 let html="";
 
 data.forEach(o=>{
+
 html+=`
-<div style="border:1px solid #ccc; padding:10px; margin:10px;">
+<div class="order">
+
 <b>Order ID:</b> ${o.id} <br>
 <b>Total:</b> ₹${o.total} <br>
 <b>Status:</b> ${o.status} <br>
 <b>Date:</b> ${o.date}
+
+<h4>Items:</h4>
+`;
+
+o.items.forEach(i=>{
+html+=`
+<div class="item">
+<img src="${i.image}">
+<div>
+${i.name}<br>
+₹${i.price} × ${i.qty}
+</div>
 </div>
 `;
 });
 
+html+=`</div>`;
+});
+
 orders.innerHTML=html;
 
+})
+.catch(()=>{
+orders.innerHTML="<h3>Failed to load orders ❌</h3>";
 });
 
 </script>
