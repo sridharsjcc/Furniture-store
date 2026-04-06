@@ -102,27 +102,29 @@ function auth(req,res,next){
 
 // ===== PRODUCTS =====
 
-// GET ALL
 app.get("/products",(req,res)=>{
   res.send(products);
 });
 
-// GET SINGLE
 app.get("/product/:id",(req,res)=>{
   const product = products.find(p=>p.id==req.params.id);
   res.send(product || {});
 });
 
-// ✅ ADD PRODUCT (ADMIN)
+// ✅ ADD PRODUCT (FIXED)
 app.post("/add-product", auth, (req,res)=>{
 
   if(!req.user.isAdmin){
     return res.send("Admin only ❌");
   }
 
-  const {name, price, image} = req.body;
+  let {name, price, image} = req.body;
 
-  if(!name || !price || !image){
+  name = name?.trim();
+  image = image?.trim();
+  price = Number(price);
+
+  if(!name || isNaN(price) || !image){
     return res.send("Missing fields ❌");
   }
 
@@ -130,7 +132,8 @@ app.post("/add-product", auth, (req,res)=>{
     id: Date.now(),
     name,
     price,
-    image
+    image,
+    images: [image]
   };
 
   products.push(newProduct);
@@ -156,7 +159,7 @@ app.post("/add-to-cart",auth,(req,res)=>{
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image,
+      image: product.images?.[0] || product.image,
       qty: 1
     });
   }
@@ -218,15 +221,6 @@ app.post("/place-order", auth, (req,res)=>{
   saveOrders();
 
   res.send("Order placed ✅");
-});
-
-app.get("/my-orders", auth, (req,res)=>{
-  res.send(orders.filter(o=>o.username===req.user.username));
-});
-
-app.get("/all-orders", auth, (req,res)=>{
-  if(!req.user.isAdmin) return res.send("Admin only ❌");
-  res.send(orders);
 });
 
 // ===== FRONTEND FALLBACK =====

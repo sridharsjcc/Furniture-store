@@ -119,11 +119,10 @@ headers:{
 "Authorization":token
 },
 body:JSON.stringify({
-name:name.value,
-price:Number(price.value),
-image:image.value
-})
-})
+  name: name.value.trim(),
+  price: Number(price.value.trim()),
+  image: image.value.trim()
+})})
 .then(res=>res.text())
 .then(msg=>{
 alert(msg);
