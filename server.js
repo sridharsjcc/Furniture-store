@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ SERVE FRONTEND
+// ✅ Serve frontend
 app.use(express.static(path.join(__dirname, "public")));
 
 const SECRET = "secret123";
@@ -102,18 +102,18 @@ function auth(req,res,next){
 
 // ===== PRODUCTS =====
 
-// ✅ GET ALL
+// GET ALL
 app.get("/products",(req,res)=>{
   res.send(products);
 });
 
-// ✅ GET SINGLE
+// GET SINGLE
 app.get("/product/:id",(req,res)=>{
   const product = products.find(p=>p.id==req.params.id);
   res.send(product || {});
 });
 
-// ✅ ADD PRODUCT (🔥 FIX ADDED)
+// ✅ ADD PRODUCT (ADMIN)
 app.post("/add-product", auth, (req,res)=>{
 
   if(!req.user.isAdmin){
@@ -122,7 +122,7 @@ app.post("/add-product", auth, (req,res)=>{
 
   const {name, price, image} = req.body;
 
-  if(!name || !price){
+  if(!name || !price || !image){
     return res.send("Missing fields ❌");
   }
 
@@ -156,7 +156,7 @@ app.post("/add-to-cart",auth,(req,res)=>{
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.images ? product.images[0] : product.image,
+      image: product.image,
       qty: 1
     });
   }
@@ -196,7 +196,6 @@ app.post("/remove",auth,(req,res)=>{
 // ===== ORDERS =====
 
 app.post("/place-order", auth, (req,res)=>{
-
   const user = users.find(u=>u.username===req.user.username);
 
   if(!user.cart.length){
@@ -235,7 +234,7 @@ app.get("*",(req,res)=>{
   res.sendFile(path.join(__dirname,"public","index.html"));
 });
 
-// ===== SERVER =====
+// ===== START =====
 app.listen(process.env.PORT || 3000,()=>{
   console.log("🚀 Server running");
 });
