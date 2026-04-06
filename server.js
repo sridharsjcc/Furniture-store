@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ SERVE FRONTEND (VERY IMPORTANT)
+// ✅ SERVE FRONTEND
 app.use(express.static(path.join(__dirname, "public")));
 
 const SECRET = "secret123";
@@ -102,13 +102,41 @@ function auth(req,res,next){
 
 // ===== PRODUCTS =====
 
+// ✅ GET ALL
 app.get("/products",(req,res)=>{
   res.send(products);
 });
 
+// ✅ GET SINGLE
 app.get("/product/:id",(req,res)=>{
   const product = products.find(p=>p.id==req.params.id);
   res.send(product || {});
+});
+
+// ✅ ADD PRODUCT (🔥 FIX ADDED)
+app.post("/add-product", auth, (req,res)=>{
+
+  if(!req.user.isAdmin){
+    return res.send("Admin only ❌");
+  }
+
+  const {name, price, image} = req.body;
+
+  if(!name || !price){
+    return res.send("Missing fields ❌");
+  }
+
+  const newProduct = {
+    id: Date.now(),
+    name,
+    price,
+    image
+  };
+
+  products.push(newProduct);
+  saveProducts();
+
+  res.send("Product added ✅");
 });
 
 // ===== CART =====
@@ -202,7 +230,7 @@ app.get("/all-orders", auth, (req,res)=>{
   res.send(orders);
 });
 
-// ===== FRONTEND FALLBACK (VERY IMPORTANT) =====
+// ===== FRONTEND FALLBACK =====
 app.get("*",(req,res)=>{
   res.sendFile(path.join(__dirname,"public","index.html"));
 });
