@@ -107,7 +107,7 @@ fetch(BASE+"/get-cart",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":token
+"Authorization":"Bearer " + token
 }
 })
 .then(r=>r.json())
