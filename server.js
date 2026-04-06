@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Serve frontend
+// Serve frontend
 app.use(express.static(path.join(__dirname, "public")));
 
 const SECRET = "secret123";
@@ -42,8 +42,23 @@ function saveOrders(){
 }
 
 // ===== AUTH =====
+function auth(req,res,next){
+  try{
+    const header = req.headers.authorization;
+    if(!header) return res.status(401).send("No token ❌");
 
-// SIGNUP
+    const token = header.split(" ")[1];
+
+    const data = jwt.verify(token, SECRET);
+    req.user = data;
+
+    next();
+  }catch{
+    res.status(401).send("Unauthorized ❌");
+  }
+}
+
+// ===== SIGNUP =====
 app.post("/signup", async (req,res)=>{
   const {username,password} = req.body;
 
@@ -68,7 +83,7 @@ app.post("/signup", async (req,res)=>{
   res.send("Signup success ✅");
 });
 
-// LOGIN
+// ===== LOGIN =====
 app.post("/login", async (req,res)=>{
   const {username,password} = req.body;
 
@@ -86,22 +101,7 @@ app.post("/login", async (req,res)=>{
   res.send({ token, username:user.username, isAdmin:user.isAdmin });
 });
 
-// AUTH
-function auth(req,res,next){
-  try{
-    const token = req.headers.authorization;
-    if(!token) return res.status(401).send("No token ❌");
-
-    const data = jwt.verify(token,SECRET);
-    req.user = data;
-    next();
-  }catch{
-    res.status(401).send("Unauthorized ❌");
-  }
-}
-
 // ===== PRODUCTS =====
-
 app.get("/products",(req,res)=>{
   res.send(products);
 });
@@ -111,7 +111,7 @@ app.get("/product/:id",(req,res)=>{
   res.send(product || {});
 });
 
-// ✅ ADD PRODUCT (FIXED)
+// ADD PRODUCT
 app.post("/add-product", auth, (req,res)=>{
 
   if(!req.user.isAdmin){
@@ -124,7 +124,7 @@ app.post("/add-product", auth, (req,res)=>{
   image = image?.trim();
   price = Number(price);
 
-  if(!name || isNaN(price) || !image){
+  if(!name || !image || price <= 0){
     return res.send("Missing fields ❌");
   }
 
@@ -143,7 +143,6 @@ app.post("/add-product", auth, (req,res)=>{
 });
 
 // ===== CART =====
-
 app.post("/add-to-cart",auth,(req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
   const product = req.body.product;
@@ -196,8 +195,7 @@ app.post("/remove",auth,(req,res)=>{
   res.send("Removed ❌");
 });
 
-// ===== ORDERS =====
-
+// ===== ORDER =====
 app.post("/place-order", auth, (req,res)=>{
   const user = users.find(u=>u.username===req.user.username);
 
@@ -223,12 +221,11 @@ app.post("/place-order", auth, (req,res)=>{
   res.send("Order placed ✅");
 });
 
-// ===== FRONTEND FALLBACK =====
+// ===== FRONTEND =====
 app.get("*",(req,res)=>{
   res.sendFile(path.join(__dirname,"public","index.html"));
 });
 
-// ===== START =====
 app.listen(process.env.PORT || 3000,()=>{
   console.log("🚀 Server running");
 });
