@@ -16,7 +16,9 @@ app.use(express.static(path.join(__dirname, "public")));
 const SECRET = "secret123";
 
 // ================== MONGODB CONNECT ==================
-mongoose.connect("mongodb+srv://sridharsjcc_db_user:kokisri@55111@cluster0.3qayq9s.mongodb.net/furniture?retryWrites=true&w=majority")
+const MONGO_URI = "mongodb+srv://sridharsjcc_db_user:kokisri%4055111@cluster0.3qayq9s.mongodb.net/furniture?retryWrites=true&w=majority";
+
+mongoose.connect(MONGO_URI)
 .then(()=>console.log("✅ MongoDB connected"))
 .catch(err=>console.log("❌ MongoDB error:", err));
 
@@ -179,7 +181,7 @@ app.post("/add-to-cart",auth, async (req,res)=>{
 
 app.post("/get-cart",auth, async (req,res)=>{
   const user = await User.findOne({username:req.user.username});
-  res.send(user.cart || []);
+  res.send(user?.cart || []);
 });
 
 app.post("/inc",auth, async (req,res)=>{
@@ -209,7 +211,7 @@ app.post("/remove",auth, async (req,res)=>{
 app.post("/place-order", auth, async (req,res)=>{
   const user = await User.findOne({username:req.user.username});
 
-  if(!user.cart.length){
+  if(!user || !user.cart.length){
     return res.send("Cart empty ❌");
   }
 
