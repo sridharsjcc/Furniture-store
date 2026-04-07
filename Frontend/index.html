@@ -12,104 +12,151 @@ body{
 
 /* HEADER */
 .header{
-  background:#111;
-  color:white;
-  padding:15px 30px;
+  background:#fff;
+  padding:10px 20px;
   display:flex;
   justify-content:space-between;
-}
-
-.header a{
-  color:white;
-  text-decoration:none;
-  margin-left:20px;
-}
-
-/* HERO */
-.hero{
-  background:url("https://images.unsplash.com/photo-1505691938895-1758d7feb511") center/cover;
-  height:250px;
-  display:flex;
   align-items:center;
-  justify-content:center;
-  color:white;
-  font-size:30px;
+  border-bottom:1px solid #ddd;
+}
+
+.logo{
+  font-size:22px;
   font-weight:bold;
+  color:orange;
 }
 
-/* GRID */
-.container{
-  padding:30px;
+.search{
+  width:40%;
+  padding:10px;
+  border-radius:20px;
+  border:1px solid #ccc;
 }
 
-#products{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
-  gap:20px;
+.menu a{
+  margin-left:15px;
+  text-decoration:none;
+  color:black;
 }
 
-/* CARD */
-.card{
-  background:white;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 2px 10px rgba(0,0,0,0.1);
-  transition:0.3s;
+/* CATEGORY */
+.categories{
+  display:flex;
+  gap:15px;
+  padding:15px;
+  overflow:auto;
+  background:#fff;
+}
+
+.cat{
+  background:#fff3e0;
+  padding:10px 15px;
+  border-radius:20px;
   cursor:pointer;
+  white-space:nowrap;
 }
 
-.card:hover{
-  transform:translateY(-5px);
-}
-
-/* IMAGE */
-.card img{
+/* BANNER */
+.banner{
   width:100%;
-  height:200px;
+  height:300px;
+  overflow:hidden;
+}
+
+.banner img{
+  width:100%;
+  height:100%;
   object-fit:cover;
 }
 
-/* CONTENT */
-.card-body{
-  padding:15px;
+/* PRODUCTS */
+.section{
+  padding:20px;
 }
 
-.card h3{
-  margin:0;
+.products{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:white;
+  padding:10px;
+  border-radius:10px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card img{
+  width:100%;
+  height:150px;
+  object-fit:cover;
+  border-radius:8px;
 }
 
 .price{
-  color:green;
+  color:orange;
   font-weight:bold;
-  margin-top:5px;
 }
 
 button{
   width:100%;
   padding:10px;
-  margin-top:10px;
+  background:orange;
   border:none;
-  background:#ff9800;
+  margin-top:10px;
   cursor:pointer;
-  border-radius:5px;
+}
+
+/* FOOTER */
+.footer{
+  background:#131921;
+  color:white;
+  padding:20px;
+  text-align:center;
+  margin-top:30px;
 }
 </style>
-
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <h2>🛒 Furniture Store</h2>
-  <div id="nav"></div>
+  <div class="logo">🛋️ Furniture</div>
+
+  <input class="search" placeholder="Search furniture...">
+
+  <div class="menu">
+    <a href="orders.html">Orders</a>
+    <a href="cart.html">Cart</a>
+    <a href="login.html">Login</a>
+  </div>
 </div>
 
-<div class="hero">
-  Premium Furniture Collection
+<!-- CATEGORY -->
+<div class="categories">
+  <div class="cat">Living Room</div>
+  <div class="cat">Bedroom</div>
+  <div class="cat">Dining</div>
+  <div class="cat">Study</div>
+  <div class="cat">Storage</div>
 </div>
 
-<div class="container">
-  <div id="products"></div>
+<!-- BANNER -->
+<div class="banner">
+  <img id="bannerImg" src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg">
+</div>
+
+<!-- PRODUCTS -->
+<div class="section">
+  <h2>🔥 Deals of the Day</h2>
+  <div class="products" id="products"></div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2026 Furniture Store | Built by You 🚀
 </div>
 
 <script>
@@ -117,34 +164,21 @@ button{
 const BASE="https://furniturebackend-adua.onrender.com";
 const token=localStorage.getItem("token");
 
-// NAV
-function renderNav(){
-let html = `<a href="index.html">Home</a>`;
+/* 🔥 BANNER SLIDER */
+const banners=[
+"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg",
+"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/newbrand_genz_banner_buy_desktop_1.jpg",
+"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/BUY_BANNERS_desktop_3.jpg",
+"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/BUY_BANNERS_desktop_4.jpg"
+];
 
-if(!token){
-  html += `<a href="login.html">Login</a>`;
-}else{
-  html += `<a href="#" onclick="logout()">Logout</a>`;
-  html += `<a href="cart.html">Cart</a>`;
-  html += `<a href="orders.html">Orders</a>`;
-}
+let i=0;
+setInterval(()=>{
+  i=(i+1)%banners.length;
+  document.getElementById("bannerImg").src=banners[i];
+},3000);
 
-nav.innerHTML = html;
-}
-
-function logout(){
-  localStorage.removeItem("token");
-  location.reload();
-}
-
-// OPEN PRODUCT
-function goProduct(id){
-  window.location="product.html?id="+id;
-}
-
-// LOAD PRODUCTS
-function load(){
-
+/* 🔥 LOAD PRODUCTS */
 fetch(BASE+"/products")
 .then(res=>res.json())
 .then(data=>{
@@ -153,54 +187,45 @@ let html="";
 
 data.forEach(p=>{
 
-const img = p.images?.[0] || p.image;
+html+=`
+<div class="card">
+<img src="${p.images?.[0] || p.image}" loading="lazy">
 
-html += `
-<div class="card" onclick="goProduct(${p.id})">
-
-<img src="${img}">
-
-<div class="card-body">
 <h3>${p.name}</h3>
 <p class="price">₹${p.price}</p>
 
-<button onclick='event.stopPropagation(); add(${JSON.stringify(p)})'>
+<button onclick='addToCart(${JSON.stringify(p)})'>
 Add to Cart
 </button>
-
-</div>
 </div>
 `;
-});
-
-products.innerHTML = html;
 
 });
 
-}
+products.innerHTML=html;
 
-// ADD TO CART
-function add(p){
+});
+
+/* 🛒 ADD TO CART */
+function addToCart(product){
 
 if(!token){
-alert("Login first ❗");
-return;
+  alert("Login first ❗");
+  return location.href="login.html";
 }
 
 fetch(BASE+"/add-to-cart",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":token
+"Authorization":"Bearer "+token
 },
-body:JSON.stringify({product:p})
+body:JSON.stringify({product})
 })
-.then(()=>alert("Added to cart 🛒"));
+.then(res=>res.text())
+.then(msg=>alert(msg));
 
 }
-
-renderNav();
-load();
 
 </script>
 
