@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const path = require("path");
 
 const app = express();
@@ -15,33 +15,48 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const SECRET = "secret123";
 
-// ===== SAFE LOAD =====
-function loadJSON(file){
-  try{
-    const data = fs.readFileSync(file,"utf-8");
-    return data ? JSON.parse(data) : [];
-  }catch{
-    return [];
-  }
-}
+// ================== MONGODB CONNECT ==================
+mongoose.connect("mongodb+srv://sridharsjcc_db_user:kokisri@55111@cluster0.3qayq9s.mongodb.net/furniture?retryWrites=true&w=majority")
+.then(()=>console.log("✅ MongoDB connected"))
+.catch(err=>console.log("❌ MongoDB error:", err));
 
-// ===== DATA =====
-let users = loadJSON("users.json");
-let products = loadJSON("products.json");
-let orders = loadJSON("orders.json");
+// ================== SCHEMAS ==================
+const UserSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+  isAdmin: Boolean,
+  cart: [
+    {
+      id: String,
+      name: String,
+      price: Number,
+      image: String,
+      qty: Number
+    }
+  ]
+});
 
-// ===== SAVE =====
-function saveUsers(){
-  fs.writeFileSync("users.json", JSON.stringify(users,null,2));
-}
-function saveProducts(){
-  fs.writeFileSync("products.json", JSON.stringify(products,null,2));
-}
-function saveOrders(){
-  fs.writeFileSync("orders.json", JSON.stringify(orders,null,2));
-}
+const ProductSchema = new mongoose.Schema({
+  name: String,
+  price: Number,
+  image: String,
+  images: [String],
+  description: String
+});
 
-// ===== AUTH =====
+const OrderSchema = new mongoose.Schema({
+  username: String,
+  items: Array,
+  total: Number,
+  date: String,
+  status: String
+});
+
+const User = mongoose.model("User", UserSchema);
+const Product = mongoose.model("Product", ProductSchema);
+const Order = mongoose.model("Order", OrderSchema);
+
+// ================== AUTH ==================
 function auth(req,res,next){
   try{
     const header = req.headers.authorization;
@@ -58,40 +73,38 @@ function auth(req,res,next){
   }
 }
 
-// ===== SIGNUP =====
+// ================== SIGNUP ==================
 app.post("/signup", async (req,res)=>{
   const {username,password} = req.body;
 
   if(!username || !password){
-    return res.status(400).send("Missing fields ❌");
+    return res.send("Missing fields ❌");
   }
 
-  if(users.find(u=>u.username===username)){
-    return res.send("User exists ❌");
-  }
+  const exists = await User.findOne({username});
+  if(exists) return res.send("User exists ❌");
 
   const hash = await bcrypt.hash(password,10);
 
-  users.push({
+  await User.create({
     username,
     password:hash,
-    cart:[],
-    isAdmin: username==="admin"
+    isAdmin: username==="admin",
+    cart:[]
   });
 
-  saveUsers();
   res.send("Signup success ✅");
 });
 
-// ===== LOGIN =====
+// ================== LOGIN ==================
 app.post("/login", async (req,res)=>{
   const {username,password} = req.body;
 
-  const user = users.find(u=>u.username===username);
-  if(!user) return res.status(401).send("Invalid ❌");
+  const user = await User.findOne({username});
+  if(!user) return res.send("Invalid ❌");
 
   const match = await bcrypt.compare(password,user.password);
-  if(!match) return res.status(401).send("Invalid ❌");
+  if(!match) return res.send("Invalid ❌");
 
   const token = jwt.sign(
     {username:user.username, isAdmin:user.isAdmin},
@@ -101,18 +114,19 @@ app.post("/login", async (req,res)=>{
   res.send({ token, username:user.username, isAdmin:user.isAdmin });
 });
 
-// ===== PRODUCTS =====
-app.get("/products",(req,res)=>{
-  res.send(products);
+// ================== PRODUCTS ==================
+app.get("/products", async (req,res)=>{
+  const data = await Product.find();
+  res.send(data);
 });
 
-app.get("/product/:id",(req,res)=>{
-  const product = products.find(p=>p.id==req.params.id);
+app.get("/product/:id", async (req,res)=>{
+  const product = await Product.findById(req.params.id);
   res.send(product || {});
 });
 
 // ADD PRODUCT
-app.post("/add-product", auth, (req,res)=>{
+app.post("/add-product", auth, async (req,res)=>{
 
   if(!req.user.isAdmin){
     return res.send("Admin only ❌");
@@ -128,34 +142,30 @@ app.post("/add-product", auth, (req,res)=>{
     return res.send("Missing fields ❌");
   }
 
-  const newProduct = {
-    id: Date.now(),
+  await Product.create({
     name,
     price,
     image,
     images: [image]
-  };
-
-  products.push(newProduct);
-  saveProducts();
+  });
 
   res.send("Product added ✅");
 });
 
-// ===== CART =====
-app.post("/add-to-cart",auth,(req,res)=>{
-  const user = users.find(u=>u.username===req.user.username);
+// ================== CART ==================
+app.post("/add-to-cart",auth, async (req,res)=>{
+  const user = await User.findOne({username:req.user.username});
   const product = req.body.product;
 
   if(!user || !product) return res.send("Error ❌");
 
-  let item = user.cart.find(i=>i.id===product.id);
+  let item = user.cart.find(i=>i.id === product._id);
 
   if(item){
     item.qty++;
   } else {
     user.cart.push({
-      id: product.id,
+      id: product._id,
       name: product.name,
       price: product.price,
       image: product.images?.[0] || product.image,
@@ -163,65 +173,66 @@ app.post("/add-to-cart",auth,(req,res)=>{
     });
   }
 
-  saveUsers();
+  await user.save();
   res.send("Added 🛒");
 });
 
-app.post("/get-cart",auth,(req,res)=>{
-  const user = users.find(u=>u.username===req.user.username);
+app.post("/get-cart",auth, async (req,res)=>{
+  const user = await User.findOne({username:req.user.username});
   res.send(user.cart || []);
 });
 
-app.post("/inc",auth,(req,res)=>{
-  const user = users.find(u=>u.username===req.user.username);
-  let item = user.cart.find(i=>i.id===req.body.id);
+app.post("/inc",auth, async (req,res)=>{
+  const user = await User.findOne({username:req.user.username});
+  let item = user.cart.find(i=>i.id === req.body.id);
   if(item) item.qty++;
-  saveUsers();
+  await user.save();
   res.send("Updated ➕");
 });
 
-app.post("/dec",auth,(req,res)=>{
-  const user = users.find(u=>u.username===req.user.username);
-  let item = user.cart.find(i=>i.id===req.body.id);
+app.post("/dec",auth, async (req,res)=>{
+  const user = await User.findOne({username:req.user.username});
+  let item = user.cart.find(i=>i.id === req.body.id);
   if(item && item.qty>1) item.qty--;
-  saveUsers();
+  await user.save();
   res.send("Updated ➖");
 });
 
-app.post("/remove",auth,(req,res)=>{
-  const user = users.find(u=>u.username===req.user.username);
-  user.cart = user.cart.filter(i=>i.id!==req.body.id);
-  saveUsers();
+app.post("/remove",auth, async (req,res)=>{
+  const user = await User.findOne({username:req.user.username});
+  user.cart = user.cart.filter(i=>i.id !== req.body.id);
+  await user.save();
   res.send("Removed ❌");
 });
 
-// ===== ORDER =====
-app.post("/place-order", auth, (req,res)=>{
-  const user = users.find(u=>u.username===req.user.username);
+// ================== ORDER ==================
+app.post("/place-order", auth, async (req,res)=>{
+  const user = await User.findOne({username:req.user.username});
 
   if(!user.cart.length){
     return res.send("Cart empty ❌");
   }
 
-  const order = {
-    id: Date.now(),
+  await Order.create({
     username: user.username,
     items: user.cart,
     total: user.cart.reduce((sum,i)=>sum+i.price*i.qty,0),
     date: new Date().toLocaleString(),
     status: "Placed"
-  };
+  });
 
-  orders.push(order);
   user.cart = [];
-
-  saveUsers();
-  saveOrders();
+  await user.save();
 
   res.send("Order placed ✅");
 });
 
-// ===== FRONTEND =====
+app.get("/my-orders", auth, async (req,res)=>{
+  const data = await Order.find({username:req.user.username});
+  res.send(data);
+});
+
+// ================== FRONTEND ==================
 app.get("*",(req,res)=>{
   res.sendFile(path.join(__dirname,"public","index.html"));
 });
