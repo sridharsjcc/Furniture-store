@@ -5,186 +5,204 @@
 
 <style>
 body{
-  font-family:Arial;
   margin:0;
-  background:#f1f3f6;
+  font-family:Arial;
+  background:#fff;
 }
 
-.header{
-  background:#131921;
-  color:white;
-  padding:15px;
+/* HEADER */
+header{
+  background:white;
+  padding:15px 30px;
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  justify-content:space-between;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
-.header a{
-  color:white;
-  text-decoration:none;
-  margin-left:15px;
+.logo{
+  font-size:22px;
+  font-weight:bold;
+  color:orange;
 }
 
-.search-box{
-  margin:20px;
-  text-align:center;
-}
-
-.search-box input{
-  width:60%;
+.search{
+  width:40%;
   padding:10px;
+  border:1px solid #ddd;
+  border-radius:5px;
 }
 
-.container{
+.nav a{
+  margin-left:20px;
+  text-decoration:none;
+  color:black;
+  font-weight:bold;
+}
+
+/* CATEGORY MENU */
+.categories{
+  display:flex;
+  gap:20px;
+  padding:10px 30px;
+  background:#fff5e6;
+  overflow-x:auto;
+}
+
+.categories div{
+  cursor:pointer;
+  font-weight:bold;
+}
+
+/* BANNER */
+.banner img{
+  width:100%;
+  height:300px;
+  object-fit:cover;
+}
+
+/* SECTION */
+.section{
   padding:20px;
 }
 
-#products{
+.section h2{
+  margin-bottom:15px;
+}
+
+/* PRODUCTS GRID */
+.products{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:15px;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:20px;
 }
 
 .card{
-  background:white;
-  padding:15px;
+  border:1px solid #eee;
   border-radius:10px;
-  text-align:center;
-  cursor:pointer;
-  transition:0.2s;
+  padding:10px;
+  background:white;
+  transition:0.3s;
 }
 
 .card:hover{
-  transform:scale(1.02);
+  transform:scale(1.03);
 }
 
 .card img{
   width:100%;
   height:150px;
   object-fit:cover;
+  border-radius:10px;
+}
+
+.price{
+  color:orange;
+  font-weight:bold;
 }
 
 button{
-  padding:8px;
   background:orange;
+  color:white;
   border:none;
-  cursor:pointer;
+  padding:8px;
+  width:100%;
   margin-top:10px;
+  cursor:pointer;
 }
 
-.cart-count{
-  background:red;
-  padding:3px 8px;
-  border-radius:50%;
-  font-size:12px;
+/* FOOTER */
+footer{
+  background:#f8f8f8;
+  padding:20px;
+  text-align:center;
+  margin-top:30px;
 }
 </style>
+
 </head>
 
 <body>
 
-<div class="header">
-  <h2>🛒 Furniture Store</h2>
-  <div id="nav"></div>
+<header>
+  <div class="logo">🛋 Furniture</div>
+
+  <input class="search" placeholder="Search furniture...">
+
+  <div class="nav">
+    <a href="cart.html">Cart</a>
+    <a href="orders.html">Orders</a>
+  </div>
+</header>
+
+<!-- CATEGORY -->
+<div class="categories">
+  <div>Living Room</div>
+  <div>Bedroom</div>
+  <div>Dining</div>
+  <div>Study</div>
+  <div>Storage</div>
+  <div>Kids</div>
+  <div>Deals</div>
 </div>
 
-<div class="search-box">
-  <input id="search" placeholder="Search..." onkeyup="load()">
+<!-- BANNER -->
+<div class="banner">
+  <img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg">
 </div>
 
-<div class="container">
-  <div id="products"></div>
+<!-- DEALS -->
+<div class="section">
+  <h2>🔥 Deals of the Day</h2>
+  <div class="products" id="products"></div>
 </div>
+
+<footer>
+  © 2026 Furniture Store | Orange Theme
+</footer>
 
 <script>
 
 const BASE="https://furniturebackend-adua.onrender.com";
-const token=localStorage.getItem("token");
 
-// ===== GET USER =====
-function getUser(){
-  try{
-    return JSON.parse(atob(token.split('.')[1]));
-  }catch{
-    return null;
-  }
-}
-
-// ===== NAV =====
-function renderNav(){
-
-let html = `<a href="index.html">Home</a>`;
-
-if(!token){
-  html += `<a href="login.html">Login</a>`;
-}else{
-
-  html += `<a href="#" onclick="logout()">Logout</a>`;
-  html += `<a href="cart.html">Cart <span id="count" class="cart-count">0</span></a>`;
-
-  const user = getUser();
-
-  if(user && user.isAdmin){
-    html += `<a href="admin.html">Admin</a>`;
-  }
-}
-
-nav.innerHTML = html;
-}
-
-// ===== LOGOUT =====
-function logout(){
-  localStorage.removeItem("token");
-  location.reload();
-}
-
-// ===== OPEN PRODUCT =====
-function goProduct(id){
-  window.location.href = "product.html?id=" + id;
-}
-
-// ===== LOAD PRODUCTS =====
-function load(){
-
+// LOAD PRODUCTS
 fetch(BASE+"/products")
-.then(r=>r.json())
+.then(res=>res.json())
 .then(data=>{
 
-let s = search.value.toLowerCase();
 let html="";
 
-data
-.filter(p => p.name.toLowerCase().includes(s))
-.forEach(p=>{
+data.forEach(p=>{
 
 html+=`
-<div class="card" onclick="goProduct(${p.id})">
-<img src="${p.images?.[0] || p.image || 'https://via.placeholder.com/150'}">
-<h3>${p.name}</h3>
-<p>₹${p.price}</p>
+<div class="card">
+<img src="${p.images?.[0] || p.image || 'https://via.placeholder.com/200'}">
 
-<button onclick='event.stopPropagation(); add(${JSON.stringify(p)})'>
-Add to Cart
-</button>
+<h3>${p.name || "No Name"}</h3>
 
-</div>`;
+<p class="price">₹${p.price || 0}</p>
+
+<button onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button>
+</div>
+`;
 
 });
 
-products.innerHTML = html;
+products.innerHTML=html;
 
 })
 .catch(()=>{
-products.innerHTML = "<h2>Failed to load products ❌</h2>";
+products.innerHTML="<h3>Failed to load products ❌</h3>";
 });
 
-}
+// ADD TO CART
+function addToCart(p){
 
-// ===== ADD TO CART =====
-function add(p){
+const token=localStorage.getItem("token");
 
 if(!token){
 alert("Login first ❗");
+location.href="login.html";
 return;
 }
 
@@ -192,49 +210,14 @@ fetch(BASE+"/add-to-cart",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":token
+"Authorization":"Bearer " + token
 },
 body:JSON.stringify({product:p})
 })
-.then(()=>{
-alert("Added to cart 🛒");
-updateCartCount();
-});
+.then(res=>res.text())
+.then(msg=>alert(msg));
 
 }
-
-// ===== CART COUNT =====
-function updateCartCount(){
-
-if(!token) return;
-
-fetch(BASE+"/get-cart",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":token
-}
-})
-.then(res=>res.json())
-.then(data=>{
-
-let totalQty = 0;
-
-data.forEach(i=>{
-  totalQty += i.qty;
-});
-
-const el=document.getElementById("count");
-if(el) el.innerText = totalQty;
-
-});
-
-}
-
-// ===== INIT =====
-renderNav();
-load();
-updateCartCount();
 
 </script>
 
