@@ -95,7 +95,7 @@ button{
 const BASE="https://furniturebackend-adua.onrender.com";
 const token=localStorage.getItem("token");
 
-// 🔐 LOGIN CHECK
+// LOGIN CHECK
 if(!token){
   alert("Login first ❗");
   location.href="login.html";
@@ -107,7 +107,7 @@ fetch(BASE+"/get-cart",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":token
+"Authorization":"Bearer " + token   // ✅ FIXED
 }
 })
 .then(r=>r.json())
@@ -117,26 +117,25 @@ cartItems.innerHTML="<h2>Failed to load cart ❌</h2>";
 });
 }
 
-// RENDER CART
+// RENDER
 function render(data){
 
-if(!data.length){
+if(!data || !data.length){
 cartItems.innerHTML="<div class='empty'>Your cart is empty 🛒</div>";
 
-document.getElementById("subtotal").innerText=0;
-document.getElementById("gst").innerText=0;
-document.getElementById("delivery").innerText=0;
-document.getElementById("total").innerText=0;
-
+subtotal.innerText=0;
+gst.innerText=0;
+delivery.innerText=0;
+total.innerText=0;
 return;
 }
 
 let html="";
-let subtotal=0;
+let subtotalVal=0;
 
 data.forEach(i=>{
 
-subtotal += i.price * i.qty;
+subtotalVal += i.price * i.qty;
 
 html += `
 <div class="item">
@@ -147,30 +146,27 @@ html += `
 <p>₹${i.price}</p>
 
 <div>
-<button onclick="dec(${i.id})">-</button>
+<button onclick="dec('${i.id}')">-</button>
 ${i.qty}
-<button onclick="inc(${i.id})">+</button>
+<button onclick="inc('${i.id}')">+</button>
 </div>
 
-<button onclick="removeItem(${i.id})">❌ Remove</button>
+<button onclick="removeItem('${i.id}')">❌ Remove</button>
 </div>
-
 </div>`;
 });
 
 cartItems.innerHTML = html;
 
-// CALCULATIONS
-let gst=Math.round(subtotal*0.18);
-let delivery=subtotal>0?500:0;
-let total=subtotal+gst+delivery;
+// CALC
+let gstVal=Math.round(subtotalVal*0.18);
+let deliveryVal=subtotalVal>0?500:0;
+let totalVal=subtotalVal+gstVal+deliveryVal;
 
-// UPDATE UI
-document.getElementById("subtotal").innerText=subtotal;
-document.getElementById("gst").innerText=gst;
-document.getElementById("delivery").innerText=delivery;
-document.getElementById("total").innerText=total;
-
+subtotal.innerText=subtotalVal;
+gst.innerText=gstVal;
+delivery.innerText=deliveryVal;
+total.innerText=totalVal;
 }
 
 // INCREASE
@@ -179,7 +175,7 @@ fetch(BASE+"/inc",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":token
+"Authorization":"Bearer " + token   // ✅ FIXED
 },
 body:JSON.stringify({id})
 }).then(load);
@@ -191,7 +187,7 @@ fetch(BASE+"/dec",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":token
+"Authorization":"Bearer " + token   // ✅ FIXED
 },
 body:JSON.stringify({id})
 }).then(load);
@@ -203,26 +199,26 @@ fetch(BASE+"/remove",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":token
+"Authorization":"Bearer " + token   // ✅ FIXED
 },
 body:JSON.stringify({id})
 }).then(load);
 }
 
-// ✅ CHECKOUT (REAL FIX)
+// CHECKOUT
 function checkout(){
 
 fetch(BASE+"/place-order",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":token
+"Authorization":"Bearer " + token   // ✅ FIXED
 }
 })
 .then(res=>res.text())
 .then(msg=>{
 alert(msg);
-load(); // refresh cart
+load();
 });
 
 }
