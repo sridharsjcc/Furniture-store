@@ -4,27 +4,19 @@
 <title>Furniture Store</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#fff;
-}
+body{margin:0;font-family:Arial;background:#fff}
 
 /* HEADER */
 header{
-  background:white;
-  padding:15px 30px;
   display:flex;
-  align-items:center;
   justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+  background:white;
   box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
-.logo{
-  font-size:22px;
-  font-weight:bold;
-  color:orange;
-}
+.logo{font-size:22px;color:orange;font-weight:bold}
 
 .search{
   width:40%;
@@ -33,20 +25,15 @@ header{
   border-radius:5px;
 }
 
-.nav a{
-  margin-left:20px;
-  text-decoration:none;
-  color:black;
-  font-weight:bold;
-}
+.nav a{margin-left:20px;text-decoration:none;color:black;font-weight:bold}
 
-/* CATEGORY MENU */
+/* CATEGORY */
 .categories{
   display:flex;
   gap:20px;
   padding:10px 30px;
   background:#fff5e6;
-  overflow-x:auto;
+  overflow:auto;
 }
 
 .categories div{
@@ -54,40 +41,56 @@ header{
   font-weight:bold;
 }
 
-/* BANNER */
-.banner img{
-  width:100%;
+/* SLIDER */
+.slider{
+  position:relative;
   height:300px;
+  overflow:hidden;
+}
+
+.slide{
+  position:absolute;
+  width:100%;
+  height:100%;
+  opacity:0;
+  transition:0.5s;
+}
+
+.slide img{
+  width:100%;
+  height:100%;
   object-fit:cover;
 }
 
-/* SECTION */
-.section{
-  padding:20px;
+.active{opacity:1}
+
+/* FILTER BAR */
+.filters{
+  display:flex;
+  gap:15px;
+  padding:15px 30px;
 }
 
-.section h2{
-  margin-bottom:15px;
+select{
+  padding:8px;
 }
 
-/* PRODUCTS GRID */
+/* PRODUCTS */
 .products{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
   gap:20px;
+  padding:20px;
 }
 
 .card{
   border:1px solid #eee;
   border-radius:10px;
   padding:10px;
-  background:white;
   transition:0.3s;
 }
 
-.card:hover{
-  transform:scale(1.03);
-}
+.card:hover{transform:scale(1.03)}
 
 .card img{
   width:100%;
@@ -96,9 +99,15 @@ header{
   border-radius:10px;
 }
 
-.price{
-  color:orange;
-  font-weight:bold;
+.price{color:orange;font-weight:bold}
+
+.discount{
+  background:red;
+  color:white;
+  padding:3px 6px;
+  font-size:12px;
+  border-radius:5px;
+  display:inline-block;
 }
 
 button{
@@ -111,12 +120,10 @@ button{
   cursor:pointer;
 }
 
-/* FOOTER */
 footer{
-  background:#f8f8f8;
-  padding:20px;
   text-align:center;
-  margin-top:30px;
+  padding:20px;
+  background:#f5f5f5;
 }
 </style>
 
@@ -126,9 +133,7 @@ footer{
 
 <header>
   <div class="logo">🛋 Furniture</div>
-
-  <input class="search" placeholder="Search furniture...">
-
+  <input class="search" id="search" placeholder="Search furniture...">
   <div class="nav">
     <a href="cart.html">Cart</a>
     <a href="orders.html">Orders</a>
@@ -137,38 +142,52 @@ footer{
 
 <!-- CATEGORY -->
 <div class="categories">
-  <div>Living Room</div>
-  <div>Bedroom</div>
-  <div>Dining</div>
-  <div>Study</div>
-  <div>Storage</div>
-  <div>Kids</div>
-  <div>Deals</div>
+  <div onclick="filterCategory('all')">All</div>
+  <div onclick="filterCategory('sofa')">Sofa</div>
+  <div onclick="filterCategory('bed')">Bed</div>
+  <div onclick="filterCategory('table')">Table</div>
+  <div onclick="filterCategory('chair')">Chair</div>
 </div>
 
-<!-- BANNER -->
-<div class="banner">
-  <img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg">
+<!-- SLIDER -->
+<div class="slider">
+  <div class="slide active"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg"></div>
+  <div class="slide"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/newbrand_genz_banner_buy_desktop_1.jpg"></div>
+  <div class="slide"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/BUY_BANNERS_desktop_3.jpg"></div>
 </div>
 
-<!-- DEALS -->
-<div class="section">
-  <h2>🔥 Deals of the Day</h2>
-  <div class="products" id="products"></div>
+<!-- FILTERS -->
+<div class="filters">
+  <select onchange="sortProducts(this.value)">
+    <option value="">Sort</option>
+    <option value="low">Price Low → High</option>
+    <option value="high">Price High → Low</option>
+  </select>
 </div>
+
+<!-- PRODUCTS -->
+<div class="products" id="products"></div>
 
 <footer>
-  © 2026 Furniture Store | Orange Theme
+  © 2026 Furniture Store
 </footer>
 
 <script>
 
 const BASE="https://furniturebackend-adua.onrender.com";
 
+let allProducts=[];
+
 // LOAD PRODUCTS
 fetch(BASE+"/products")
 .then(res=>res.json())
 .then(data=>{
+  allProducts=data;
+  render(data);
+});
+
+// RENDER
+function render(data){
 
 let html="";
 
@@ -176,6 +195,8 @@ data.forEach(p=>{
 
 html+=`
 <div class="card">
+<span class="discount">-${Math.floor(Math.random()*60)}%</span>
+
 <img src="${p.images?.[0] || p.image || 'https://via.placeholder.com/200'}">
 
 <h3>${p.name || "No Name"}</h3>
@@ -189,11 +210,58 @@ html+=`
 });
 
 products.innerHTML=html;
+}
 
-})
-.catch(()=>{
-products.innerHTML="<h3>Failed to load products ❌</h3>";
+// CATEGORY FILTER
+function filterCategory(cat){
+
+if(cat==="all"){
+  render(allProducts);
+  return;
+}
+
+const filtered = allProducts.filter(p=>
+  p.name?.toLowerCase().includes(cat)
+);
+
+render(filtered);
+}
+
+// SEARCH
+search.addEventListener("input", e=>{
+const val=e.target.value.toLowerCase();
+
+const filtered=allProducts.filter(p=>
+p.name?.toLowerCase().includes(val)
+);
+
+render(filtered);
 });
+
+// SORT
+function sortProducts(type){
+
+let sorted=[...allProducts];
+
+if(type==="low"){
+  sorted.sort((a,b)=>a.price-b.price);
+}
+if(type==="high"){
+  sorted.sort((a,b)=>b.price-a.price);
+}
+
+render(sorted);
+}
+
+// SLIDER AUTO
+let slides=document.querySelectorAll(".slide");
+let index=0;
+
+setInterval(()=>{
+slides[index].classList.remove("active");
+index=(index+1)%slides.length;
+slides[index].classList.add("active");
+},3000);
 
 // ADD TO CART
 function addToCart(p){
@@ -210,7 +278,7 @@ fetch(BASE+"/add-to-cart",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":"Bearer " + token
+"Authorization":"Bearer "+token
 },
 body:JSON.stringify({product:p})
 })
