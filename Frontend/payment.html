@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Payment</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f5f5f5;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.box{
+  background:white;
+  padding:30px;
+  border-radius:10px;
+  width:300px;
+  text-align:center;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  background:orange;
+  color:white;
+  cursor:pointer;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>💳 Payment</h2>
+
+<input placeholder="Card Number">
+<input placeholder="MM/YY">
+<input placeholder="CVV">
+
+<button onclick="pay()">Pay Now</button>
+
+</div>
+
+<script>
+
+const BASE="https://furniturebackend-adua.onrender.com";
+const token=localStorage.getItem("token");
+
+function pay(){
+
+fetch(BASE+"/place-order",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+token
+}
+})
+.then(res=>res.text())
+.then(msg=>{
+alert(msg);
+location.href="orders.html";
+});
+
+}
+
+</script>
+
+</body>
+</html>
