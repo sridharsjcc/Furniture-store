@@ -84,7 +84,6 @@ cursor:pointer
 <div class="nav" id="nav"></div>
 </header>
 
-<!-- CATEGORY -->
 <div class="categories">
 <div onclick="filter('all')">All</div>
 <div onclick="filter('sofa')">Sofa</div>
@@ -93,13 +92,11 @@ cursor:pointer
 <div onclick="filter('chair')">Chair</div>
 </div>
 
-<!-- SLIDER -->
 <div class="slider">
 <div class="slide active"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg"></div>
 <div class="slide"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/newbrand_genz_banner_buy_desktop_1.jpg"></div>
 </div>
 
-<!-- PRODUCTS -->
 <div class="products" id="products"></div>
 
 <script>
@@ -128,18 +125,15 @@ products.innerHTML=data.map(p=>`
 </div>`).join("");
 }
 
-// VIEW PRODUCT
 function view(id){
 location.href="product.html?id="+id;
 }
 
-// FILTER
 function filter(cat){
 if(cat==="all") return render(allProducts);
 render(allProducts.filter(p=>p.name?.toLowerCase().includes(cat)));
 }
 
-// SEARCH
 search.oninput=e=>{
 let v=e.target.value.toLowerCase();
 render(allProducts.filter(p=>p.name?.toLowerCase().includes(v)));
@@ -172,10 +166,13 @@ headers:{
 },
 body:JSON.stringify({product:p})
 })
-.then(()=>alert("Added to cart 🛒"));
+.then(()=>{
+alert("Added 🛒");
+loadCartCount(); // 🔥 update badge
+});
 }
 
-// ================= NAVBAR =================
+// ================= NAV =================
 
 function getUser(){
 const token=localStorage.getItem("token");
@@ -195,14 +192,14 @@ const user=getUser();
 if(!user){
 nav.innerHTML=`
 <a href="login.html">Login</a>
-<a href="cart.html">Cart</a>
+<a href="cart.html">Cart (0)</a>
 `;
 return;
 }
 
 nav.innerHTML=`
 <span>Hi, ${user.username}</span>
-<a href="cart.html">Cart</a>
+<a href="cart.html">Cart (<span id="cartCount">0</span>)</a>
 <a href="orders.html">Orders</a>
 ${user.isAdmin ? `<a href="admin.html">Admin</a>` : ""}
 <a href="#" onclick="logout()">Logout</a>
@@ -214,7 +211,28 @@ localStorage.removeItem("token");
 location.reload();
 }
 
+// 🔥 CART COUNT
+function loadCartCount(){
+const token=localStorage.getItem("token");
+if(!token) return;
+
+fetch(BASE+"/get-cart",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+token
+}
+})
+.then(r=>r.json())
+.then(data=>{
+let count=data.reduce((s,i)=>s+i.qty,0);
+document.getElementById("cartCount").innerText=count;
+})
+.catch(()=>{});
+}
+
 loadNav();
+setTimeout(loadCartCount,500);
 
 </script>
 
