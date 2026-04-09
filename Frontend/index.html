@@ -4,27 +4,19 @@
 <title>Furniture Store</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f5f5f5;
-}
+body{margin:0;font-family:Arial;background:#f5f5f5}
 
 /* HEADER */
 .header{
   background:#fff;
-  padding:10px 20px;
+  padding:15px 20px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   border-bottom:1px solid #ddd;
 }
 
-.logo{
-  font-size:22px;
-  font-weight:bold;
-  color:orange;
-}
+.logo{font-size:22px;font-weight:bold;color:orange}
 
 .search{
   width:40%;
@@ -37,6 +29,7 @@ body{
   margin-left:15px;
   text-decoration:none;
   color:black;
+  font-weight:bold;
 }
 
 /* CATEGORY */
@@ -57,27 +50,18 @@ body{
 }
 
 /* BANNER */
-.banner{
-  width:100%;
-  height:300px;
-  overflow:hidden;
-}
-
 .banner img{
   width:100%;
-  height:100%;
+  height:300px;
   object-fit:cover;
 }
 
 /* PRODUCTS */
-.section{
-  padding:20px;
-}
-
 .products{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
   gap:20px;
+  padding:20px;
 }
 
 .card{
@@ -94,10 +78,7 @@ body{
   border-radius:8px;
 }
 
-.price{
-  color:orange;
-  font-weight:bold;
-}
+.price{color:orange;font-weight:bold}
 
 button{
   width:100%;
@@ -107,111 +88,116 @@ button{
   margin-top:10px;
   cursor:pointer;
 }
-
-/* FOOTER */
-.footer{
-  background:#131921;
-  color:white;
-  padding:20px;
-  text-align:center;
-  margin-top:30px;
-}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
-  <div class="logo">🛋️ Furniture</div>
+  <div class="logo">🛋 Furniture</div>
 
-  <input class="search" placeholder="Search furniture...">
+  <input class="search" id="search" placeholder="Search furniture...">
 
-  <div class="menu">
-    <a href="orders.html">Orders</a>
-    <a href="cart.html">Cart</a>
-    <a href="login.html">Login</a>
-  </div>
+  <div class="menu" id="menu"></div>
 </div>
 
-<!-- CATEGORY -->
 <div class="categories">
-  <div class="cat">Living Room</div>
-  <div class="cat">Bedroom</div>
-  <div class="cat">Dining</div>
-  <div class="cat">Study</div>
-  <div class="cat">Storage</div>
+  <div class="cat" onclick="filter('all')">All</div>
+  <div class="cat" onclick="filter('sofa')">Sofa</div>
+  <div class="cat" onclick="filter('bed')">Bed</div>
+  <div class="cat" onclick="filter('table')">Table</div>
+  <div class="cat" onclick="filter('chair')">Chair</div>
 </div>
 
-<!-- BANNER -->
 <div class="banner">
-  <img id="bannerImg" src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg">
+  <img id="banner">
 </div>
 
-<!-- PRODUCTS -->
-<div class="section">
-  <h2>🔥 Deals of the Day</h2>
-  <div class="products" id="products"></div>
-</div>
-
-<!-- FOOTER -->
-<div class="footer">
-  © 2026 Furniture Store | Built by You 🚀
-</div>
+<div class="products" id="products"></div>
 
 <script>
-
 const BASE="https://furniturebackend-adua.onrender.com";
-const token=localStorage.getItem("token");
+let all=[];
 
-/* 🔥 BANNER SLIDER */
-const banners=[
-"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg",
-"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/newbrand_genz_banner_buy_desktop_1.jpg",
-"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/BUY_BANNERS_desktop_3.jpg",
-"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/BUY_BANNERS_desktop_4.jpg"
-];
+// USER NAV
+function getUser(){
+  const token=localStorage.getItem("token");
+  if(!token) return null;
+  try{
+    return JSON.parse(atob(token.split('.')[1]));
+  }catch{return null;}
+}
 
-let i=0;
-setInterval(()=>{
-  i=(i+1)%banners.length;
-  document.getElementById("bannerImg").src=banners[i];
-},3000);
+function loadNav(){
+  const user=getUser();
 
-/* 🔥 LOAD PRODUCTS */
+  if(!user){
+    menu.innerHTML=`
+    <a href="login.html">Login</a>
+    <a href="cart.html">Cart</a>`;
+    return;
+  }
+
+  menu.innerHTML=`
+  <span>Hi ${user.username}</span>
+  <a href="cart.html">Cart</a>
+  <a href="orders.html">Orders</a>
+  ${user.isAdmin ? `<a href="admin.html">Admin</a>` : ""}
+  <a href="#" onclick="logout()">Logout</a>`;
+}
+
+function logout(){
+  localStorage.removeItem("token");
+  location.reload();
+}
+
+loadNav();
+
+// LOAD PRODUCTS
 fetch(BASE+"/products")
-.then(res=>res.json())
-.then(data=>{
+.then(r=>r.json())
+.then(d=>{
+  all=d;
+  render(d);
+});
 
-let html="";
-
-data.forEach(p=>{
-
-html+=`
+function render(data){
+products.innerHTML=data.map(p=>`
 <div class="card">
-<img src="${p.images?.[0] || p.image}" loading="lazy">
-
+<img src="${p.images?.[0]||p.image}">
 <h3>${p.name}</h3>
 <p class="price">₹${p.price}</p>
 
-<button onclick='addToCart(${JSON.stringify(p)})'>
-Add to Cart
-</button>
-</div>
-`;
+<button onclick="view('${p._id}')">View</button>
+<button onclick='add(${JSON.stringify(p)})'>Add</button>
+</div>`).join("");
+}
 
-});
+// FILTER
+function filter(cat){
+if(cat==="all") return render(all);
+render(all.filter(p=>p.category?.toLowerCase().includes(cat)));
+}
 
-products.innerHTML=html;
+// SEARCH
+search.oninput=e=>{
+let v=e.target.value.toLowerCase();
+render(all.filter(p=>p.name.toLowerCase().includes(v)));
+};
 
-});
+// VIEW
+function view(id){
+location.href="product.html?id="+id;
+}
 
-/* 🛒 ADD TO CART */
-function addToCart(product){
+// ADD
+function add(p){
+const token=localStorage.getItem("token");
 
 if(!token){
-  alert("Login first ❗");
-  return location.href="login.html";
+alert("Login first ❗");
+location.href="login.html";
+return;
 }
 
 fetch(BASE+"/add-to-cart",{
@@ -220,12 +206,24 @@ headers:{
 "Content-Type":"application/json",
 "Authorization":"Bearer "+token
 },
-body:JSON.stringify({product})
+body:JSON.stringify({product:p})
 })
-.then(res=>res.text())
-.then(msg=>alert(msg));
-
+.then(()=>alert("Added 🛒"));
 }
+
+// BANNER
+const banners=[
+"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg",
+"https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/newbrand_genz_banner_buy_desktop_1.jpg"
+];
+
+let i=0;
+setInterval(()=>{
+i=(i+1)%banners.length;
+banner.src=banners[i];
+},3000);
+
+banner.src=banners[0];
 
 </script>
 

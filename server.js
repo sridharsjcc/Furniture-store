@@ -9,13 +9,11 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// Serve frontend
 app.use(express.static(path.join(__dirname, "public")));
 
 const SECRET = "secret123";
 
-// ================== MONGODB CONNECT ==================
+// ================== MONGODB ==================
 const MONGO_URI = "mongodb+srv://sridharsjcc_db_user:kokisri%4055111@cluster0.3qayq9s.mongodb.net/furniture?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
@@ -43,7 +41,8 @@ const ProductSchema = new mongoose.Schema({
   price: Number,
   image: String,
   images: [String],
-  description: String
+  description: String,
+  category: String   // ✅ NEW
 });
 
 const OrderSchema = new mongoose.Schema({
@@ -65,10 +64,9 @@ function auth(req,res,next){
     if(!header) return res.status(401).send("No token ❌");
 
     const token = header.split(" ")[1];
-
     const data = jwt.verify(token, SECRET);
-    req.user = data;
 
+    req.user = data;
     next();
   }catch{
     res.status(401).send("Unauthorized ❌");
@@ -127,14 +125,14 @@ app.get("/product/:id", async (req,res)=>{
   res.send(product || {});
 });
 
-// ADD PRODUCT
+// ADD PRODUCT (UPDATED)
 app.post("/add-product", auth, async (req,res)=>{
 
   if(!req.user.isAdmin){
     return res.send("Admin only ❌");
   }
 
-  let {name, price, image} = req.body;
+  let {name, price, image, category, description} = req.body;
 
   name = name?.trim();
   image = image?.trim();
@@ -148,7 +146,9 @@ app.post("/add-product", auth, async (req,res)=>{
     name,
     price,
     image,
-    images: [image]
+    images:[image],
+    category: category || "general",
+    description: description || ""
   });
 
   res.send("Product added ✅");
