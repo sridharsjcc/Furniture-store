@@ -98,7 +98,7 @@ fetch(BASE+"/add-product",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization": token   // ✅ FIX
+"Authorization": "Bearer " + token   // ✅ FIX
 },
 body:JSON.stringify({
 name:n,

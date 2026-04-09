@@ -71,9 +71,13 @@ body:JSON.stringify({username:u.value,password:p.value})
 })
 .then(r=>r.json())
 .then(d=>{
+if(d.token){
 localStorage.setItem("token",d.token);
 alert("Login success ✅");
-window.location="index.html";
+location.href="index.html";
+}else{
+alert("Invalid login ❌");
+}
 });
 }
 

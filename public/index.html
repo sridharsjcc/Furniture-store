@@ -6,71 +6,34 @@
 <style>
 body{margin:0;font-family:Arial;background:#fff}
 
-<header>
-
-<div class="logo">🛋 Furniture</div>
-
-<input class="search" id="search" placeholder="Search...">
-
-<div class="nav" id="nav"></div>
-
-</header>
-
-// ================= USER UI =================
-
-function getUser(){
-  const token = localStorage.getItem("token");
-  if(!token) return null;
-
-  try{
-    return JSON.parse(atob(token.split('.')[1]));
-  }catch{
-    return null;
-  }
+header{
+display:flex;justify-content:space-between;
+align-items:center;
+padding:15px 30px;
+background:white;
+box-shadow:0 2px 5px rgba(0,0,0,0.1)
 }
-
-function loadNav(){
-
-  const nav = document.getElementById("nav");
-  const user = getUser();
-
-  // ❌ NOT LOGGED IN
-  if(!user){
-    nav.innerHTML = `
-      <a href="login.html">Login</a>
-      <a href="cart.html">Cart</a>
-    `;
-    return;
-  }
-
-  // ✅ LOGGED IN
-  nav.innerHTML = `
-    <span>Hi, ${user.username}</span>
-    <a href="cart.html">Cart</a>
-    <a href="orders.html">Orders</a>
-    ${user.isAdmin ? `<a href="admin.html">Admin</a>` : ""}
-    <a href="#" onclick="logout()">Logout</a>
-  `;
-}
-
-function logout(){
-  localStorage.removeItem("token");
-  location.reload();
-}
-
-loadNav();
 
 .logo{color:orange;font-size:22px;font-weight:bold}
-.search{width:40%;padding:10px;border:1px solid #ddd}
 
-.nav a{margin-left:20px;text-decoration:none;color:black}
-
-.categories{
-display:flex;gap:20px;padding:10px 30px;
-background:#fff5e6;overflow:auto
+.search{
+width:40%;
+padding:10px;
+border:1px solid #ddd;
+border-radius:5px;
 }
 
-.slider{height:300px;overflow:hidden;position:relative}
+.nav a{margin-left:15px;text-decoration:none;color:black;font-weight:bold}
+.nav span{margin-right:10px}
+
+.categories{
+display:flex;gap:20px;
+padding:10px 30px;
+background:#fff5e6;
+overflow:auto
+}
+
+.slider{height:300px;position:relative;overflow:hidden}
 .slide{position:absolute;width:100%;height:100%;opacity:0;transition:.5s}
 .slide img{width:100%;height:100%;object-fit:cover}
 .active{opacity:1}
@@ -82,18 +45,31 @@ gap:20px;padding:20px
 }
 
 .card{
-border:1px solid #eee;border-radius:10px;
-padding:10px;transition:.3s
+border:1px solid #eee;
+border-radius:10px;
+padding:10px;
+transition:.3s
 }
 
 .card:hover{transform:scale(1.03)}
-.card img{width:100%;height:150px;object-fit:cover}
+
+.card img{
+width:100%;
+height:150px;
+object-fit:cover;
+border-radius:10px
+}
 
 .price{color:orange;font-weight:bold}
 
 button{
-background:orange;color:white;
-border:none;padding:8px;width:100%;cursor:pointer
+background:orange;
+color:white;
+border:none;
+padding:8px;
+width:100%;
+margin-top:5px;
+cursor:pointer
 }
 </style>
 </head>
@@ -102,15 +78,13 @@ border:none;padding:8px;width:100%;cursor:pointer
 
 <header>
 <div class="logo">🛋 Furniture</div>
-<input class="search" id="search" placeholder="Search...">
 
-<div class="nav">
-<a href="index.html">Home</a>
-<a href="cart.html">Cart</a>
-<a href="orders.html">Orders</a>
-</div>
+<input class="search" id="search" placeholder="Search furniture...">
+
+<div class="nav" id="nav"></div>
 </header>
 
+<!-- CATEGORY -->
 <div class="categories">
 <div onclick="filter('all')">All</div>
 <div onclick="filter('sofa')">Sofa</div>
@@ -119,51 +93,59 @@ border:none;padding:8px;width:100%;cursor:pointer
 <div onclick="filter('chair')">Chair</div>
 </div>
 
+<!-- SLIDER -->
 <div class="slider">
 <div class="slide active"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg"></div>
 <div class="slide"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/newbrand_genz_banner_buy_desktop_1.jpg"></div>
 </div>
 
+<!-- PRODUCTS -->
 <div class="products" id="products"></div>
 
 <script>
 
 const BASE="https://furniturebackend-adua.onrender.com";
-let all=[];
+let allProducts=[];
 
+// LOAD PRODUCTS
 fetch(BASE+"/products")
 .then(r=>r.json())
-.then(d=>{
-all=d;
-render(d);
+.then(data=>{
+allProducts=data;
+render(data);
 });
 
+// RENDER
 function render(data){
 products.innerHTML=data.map(p=>`
 <div class="card">
 <img src="${p.images?.[0]||p.image||'https://via.placeholder.com/200'}">
-<h3>${p.name}</h3>
-<p class="price">₹${p.price}</p>
+<h3>${p.name||"No name"}</h3>
+<p class="price">₹${p.price||0}</p>
 
 <button onclick="view('${p._id}')">View</button>
-<button onclick='add(${JSON.stringify(p)})'>Add</button>
+<button onclick='add(${JSON.stringify(p)})'>Add to Cart</button>
 </div>`).join("");
 }
 
+// VIEW PRODUCT
 function view(id){
 location.href="product.html?id="+id;
 }
 
+// FILTER
 function filter(cat){
-if(cat==="all") return render(all);
-render(all.filter(p=>p.name?.toLowerCase().includes(cat)));
+if(cat==="all") return render(allProducts);
+render(allProducts.filter(p=>p.name?.toLowerCase().includes(cat)));
 }
 
+// SEARCH
 search.oninput=e=>{
 let v=e.target.value.toLowerCase();
-render(all.filter(p=>p.name?.toLowerCase().includes(v)));
+render(allProducts.filter(p=>p.name?.toLowerCase().includes(v)));
 };
 
+// SLIDER
 let slides=document.querySelectorAll(".slide");
 let i=0;
 setInterval(()=>{
@@ -172,8 +154,16 @@ i=(i+1)%slides.length;
 slides[i].classList.add("active");
 },3000);
 
+// ADD TO CART
 function add(p){
 const token=localStorage.getItem("token");
+
+if(!token){
+alert("Login first ❗");
+location.href="login.html";
+return;
+}
+
 fetch(BASE+"/add-to-cart",{
 method:"POST",
 headers:{
@@ -181,8 +171,50 @@ headers:{
 "Authorization":"Bearer "+token
 },
 body:JSON.stringify({product:p})
-}).then(()=>alert("Added 🛒"));
+})
+.then(()=>alert("Added to cart 🛒"));
 }
+
+// ================= NAVBAR =================
+
+function getUser(){
+const token=localStorage.getItem("token");
+if(!token) return null;
+
+try{
+return JSON.parse(atob(token.split('.')[1]));
+}catch{
+return null;
+}
+}
+
+function loadNav(){
+const nav=document.getElementById("nav");
+const user=getUser();
+
+if(!user){
+nav.innerHTML=`
+<a href="login.html">Login</a>
+<a href="cart.html">Cart</a>
+`;
+return;
+}
+
+nav.innerHTML=`
+<span>Hi, ${user.username}</span>
+<a href="cart.html">Cart</a>
+<a href="orders.html">Orders</a>
+${user.isAdmin ? `<a href="admin.html">Admin</a>` : ""}
+<a href="#" onclick="logout()">Logout</a>
+`;
+}
+
+function logout(){
+localStorage.removeItem("token");
+location.reload();
+}
+
+loadNav();
 
 </script>
 
