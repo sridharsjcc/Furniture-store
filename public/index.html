@@ -6,11 +6,59 @@
 <style>
 body{margin:0;font-family:Arial;background:#fff}
 
-header{
-display:flex;justify-content:space-between;
-padding:15px 30px;background:white;
-box-shadow:0 2px 5px rgba(0,0,0,0.1)
+<header>
+
+<div class="logo">🛋 Furniture</div>
+
+<input class="search" id="search" placeholder="Search...">
+
+<div class="nav" id="nav"></div>
+
+</header>
+
+// ================= USER UI =================
+
+function getUser(){
+  const token = localStorage.getItem("token");
+  if(!token) return null;
+
+  try{
+    return JSON.parse(atob(token.split('.')[1]));
+  }catch{
+    return null;
+  }
 }
+
+function loadNav(){
+
+  const nav = document.getElementById("nav");
+  const user = getUser();
+
+  // ❌ NOT LOGGED IN
+  if(!user){
+    nav.innerHTML = `
+      <a href="login.html">Login</a>
+      <a href="cart.html">Cart</a>
+    `;
+    return;
+  }
+
+  // ✅ LOGGED IN
+  nav.innerHTML = `
+    <span>Hi, ${user.username}</span>
+    <a href="cart.html">Cart</a>
+    <a href="orders.html">Orders</a>
+    ${user.isAdmin ? `<a href="admin.html">Admin</a>` : ""}
+    <a href="#" onclick="logout()">Logout</a>
+  `;
+}
+
+function logout(){
+  localStorage.removeItem("token");
+  location.reload();
+}
+
+loadNav();
 
 .logo{color:orange;font-size:22px;font-weight:bold}
 .search{width:40%;padding:10px;border:1px solid #ddd}

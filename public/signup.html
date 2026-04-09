@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Signup</title>
+</head>
+
+<body>
+
+<h2>Signup</h2>
+
+<input id="username" placeholder="Username"><br>
+<input id="password" type="password" placeholder="Password"><br>
+
+<button onclick="signup()">Signup</button>
+
+<script>
+
+const BASE="https://furniturebackend-adua.onrender.com";
+
+function signup(){
+
+fetch(BASE+"/signup",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+username:username.value,
+password:password.value
+})
+})
+.then(r=>r.text())
+.then(msg=>{
+alert(msg);
+location.href="login.html";
+});
+
+}
+
+</script>
+
+</body>
+</html>
