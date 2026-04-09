@@ -4,71 +4,42 @@
 <title>Product</title>
 
 <style>
-body{
-  font-family:Arial;
-  margin:0;
-  background:#f1f3f6;
-}
+body{margin:0;font-family:Arial;background:#f5f5f5}
 
-.header{
-  background:#131921;
-  color:white;
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
-}
+header{padding:15px;background:white}
 
-.container{
-  display:flex;
-  gap:40px;
-  padding:40px;
-}
+.container{display:flex;gap:40px;padding:40px}
 
-.left img{
-  width:400px;
-  border-radius:10px;
-}
+img{border-radius:10px}
 
-.thumbs img{
-  width:80px;
-  margin:5px;
-  cursor:pointer;
-}
+.left img{width:400px}
+.thumbs img{width:70px;cursor:pointer;margin:5px}
 
-.right{
-  max-width:400px;
-}
+.right{max-width:400px}
+.price{color:orange;font-size:22px}
 
 button{
-  padding:12px 20px;
-  background:orange;
-  border:none;
-  cursor:pointer;
-  margin-top:20px;
+background:orange;color:white;
+padding:12px;border:none;width:100%;margin-top:10px
 }
 </style>
-
 </head>
 
 <body>
 
-<div class="header">
-<h2>🛒 Furniture Store</h2>
-<a href="index.html" style="color:white;">Home</a>
-</div>
+<header><a href="index.html">← Back</a></header>
 
 <div class="container">
 
 <div class="left">
-<img id="mainImg">
-<div class="thumbs" id="thumbs"></div>
+<img id="main">
+<div id="thumbs"></div>
 </div>
 
 <div class="right">
 <h2 id="name"></h2>
-<h3 id="price"></h3>
+<p class="price" id="price"></p>
 <p id="desc"></p>
-
 <button onclick="add()">Add to Cart</button>
 </div>
 
@@ -77,74 +48,38 @@ button{
 <script>
 
 const BASE="https://furniturebackend-adua.onrender.com";
-const token=localStorage.getItem("token");
-
-const params=new URLSearchParams(window.location.search);
-const id=params.get("id");
+const id=new URLSearchParams(location.search).get("id");
 
 let product={};
 
 fetch(BASE+"/product/"+id)
-.then(res=>res.json())
+.then(r=>r.json())
 .then(p=>{
-
-// ❌ if product not found
-if(!p || !p.id){
-  document.body.innerHTML="<h2 style='padding:40px'>Product not found ❌</h2>";
-  return;
-}
-
 product=p;
 
-// ✅ SET DATA
-document.getElementById("name").innerText=p.name;
-document.getElementById("price").innerText="₹"+p.price;
-document.getElementById("desc").innerText=p.description || "";
+name.innerText=p.name;
+price.innerText="₹"+p.price;
+desc.innerText=p.description||"";
 
-// ✅ IMAGE FIX
-const main = document.getElementById("mainImg");
-const thumbsDiv = document.getElementById("thumbs");
+let imgs=p.images?.length?p.images:[p.image];
 
-const imgs = p.images && p.images.length ? p.images : [p.image || "https://via.placeholder.com/400"];
+main.src=imgs[0];
 
-main.src = imgs[0];
-
-// ✅ SAFE LOOP
-let thumbsHTML="";
-imgs.forEach(img=>{
-  thumbsHTML += `<img src="${img}" onclick="change('${img}')">`;
+thumbs.innerHTML=imgs.map(i=>
+`<img src="${i}" onclick="main.src='${i}'">`
+).join("");
 });
 
-thumbsDiv.innerHTML = thumbsHTML;
-
-});
-
-// CHANGE IMAGE
-function change(src){
-document.getElementById("mainImg").src=src;
-}
-
-// ADD TO CART
 function add(){
-
-if(!token){
-alert("Login first ❗");
-return;
-}
-
+const token=localStorage.getItem("token");
 fetch(BASE+"/add-to-cart",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":token
+"Authorization":"Bearer "+token
 },
 body:JSON.stringify({product})
-})
-.then(res=>res.text())
-.then(msg=>{
-alert(msg);
-});
-
+}).then(()=>alert("Added 🛒"));
 }
 
 </script>

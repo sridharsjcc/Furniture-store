@@ -6,274 +6,126 @@
 <style>
 body{margin:0;font-family:Arial;background:#fff}
 
-/* HEADER */
 header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 30px;
-  background:white;
-  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+display:flex;justify-content:space-between;
+padding:15px 30px;background:white;
+box-shadow:0 2px 5px rgba(0,0,0,0.1)
 }
 
-.logo{font-size:22px;color:orange;font-weight:bold}
+.logo{color:orange;font-size:22px;font-weight:bold}
+.search{width:40%;padding:10px;border:1px solid #ddd}
 
-.search{
-  width:40%;
-  padding:10px;
-  border:1px solid #ddd;
-  border-radius:5px;
-}
+.nav a{margin-left:20px;text-decoration:none;color:black}
 
-.nav a{margin-left:20px;text-decoration:none;color:black;font-weight:bold}
-
-/* CATEGORY */
 .categories{
-  display:flex;
-  gap:20px;
-  padding:10px 30px;
-  background:#fff5e6;
-  overflow:auto;
+display:flex;gap:20px;padding:10px 30px;
+background:#fff5e6;overflow:auto
 }
 
-.categories div{
-  cursor:pointer;
-  font-weight:bold;
-}
-
-/* SLIDER */
-.slider{
-  position:relative;
-  height:300px;
-  overflow:hidden;
-}
-
-.slide{
-  position:absolute;
-  width:100%;
-  height:100%;
-  opacity:0;
-  transition:0.5s;
-}
-
-.slide img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
+.slider{height:300px;overflow:hidden;position:relative}
+.slide{position:absolute;width:100%;height:100%;opacity:0;transition:.5s}
+.slide img{width:100%;height:100%;object-fit:cover}
 .active{opacity:1}
 
-/* FILTER BAR */
-.filters{
-  display:flex;
-  gap:15px;
-  padding:15px 30px;
-}
-
-select{
-  padding:8px;
-}
-
-/* PRODUCTS */
 .products{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:20px;
-  padding:20px;
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+gap:20px;padding:20px
 }
 
 .card{
-  border:1px solid #eee;
-  border-radius:10px;
-  padding:10px;
-  transition:0.3s;
+border:1px solid #eee;border-radius:10px;
+padding:10px;transition:.3s
 }
 
 .card:hover{transform:scale(1.03)}
-
-.card img{
-  width:100%;
-  height:150px;
-  object-fit:cover;
-  border-radius:10px;
-}
+.card img{width:100%;height:150px;object-fit:cover}
 
 .price{color:orange;font-weight:bold}
 
-.discount{
-  background:red;
-  color:white;
-  padding:3px 6px;
-  font-size:12px;
-  border-radius:5px;
-  display:inline-block;
-}
-
 button{
-  background:orange;
-  color:white;
-  border:none;
-  padding:8px;
-  width:100%;
-  margin-top:10px;
-  cursor:pointer;
-}
-
-footer{
-  text-align:center;
-  padding:20px;
-  background:#f5f5f5;
+background:orange;color:white;
+border:none;padding:8px;width:100%;cursor:pointer
 }
 </style>
-
 </head>
 
 <body>
 
 <header>
-  <div class="logo">🛋 Furniture</div>
-  <input class="search" id="search" placeholder="Search furniture...">
-  <div class="nav">
-    <a href="cart.html">Cart</a>
-    <a href="orders.html">Orders</a>
-  </div>
+<div class="logo">🛋 Furniture</div>
+<input class="search" id="search" placeholder="Search...">
+
+<div class="nav">
+<a href="index.html">Home</a>
+<a href="cart.html">Cart</a>
+<a href="orders.html">Orders</a>
+</div>
 </header>
 
-<!-- CATEGORY -->
 <div class="categories">
-  <div onclick="filterCategory('all')">All</div>
-  <div onclick="filterCategory('sofa')">Sofa</div>
-  <div onclick="filterCategory('bed')">Bed</div>
-  <div onclick="filterCategory('table')">Table</div>
-  <div onclick="filterCategory('chair')">Chair</div>
+<div onclick="filter('all')">All</div>
+<div onclick="filter('sofa')">Sofa</div>
+<div onclick="filter('bed')">Bed</div>
+<div onclick="filter('table')">Table</div>
+<div onclick="filter('chair')">Chair</div>
 </div>
 
-<!-- SLIDER -->
 <div class="slider">
-  <div class="slide active"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg"></div>
-  <div class="slide"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/newbrand_genz_banner_buy_desktop_1.jpg"></div>
-  <div class="slide"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/BUY_BANNERS_desktop_3.jpg"></div>
+<div class="slide active"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/jan26_banner_buy_desktop.jpg"></div>
+<div class="slide"><img src="https://assets.furlenco.com/s3-furlenco-images/evolve_2_0/newbrand_genz_banner_buy_desktop_1.jpg"></div>
 </div>
 
-<!-- FILTERS -->
-<div class="filters">
-  <select onchange="sortProducts(this.value)">
-    <option value="">Sort</option>
-    <option value="low">Price Low → High</option>
-    <option value="high">Price High → Low</option>
-  </select>
-</div>
-
-<!-- PRODUCTS -->
 <div class="products" id="products"></div>
-
-<footer>
-  © 2026 Furniture Store
-</footer>
 
 <script>
 
 const BASE="https://furniturebackend-adua.onrender.com";
+let all=[];
 
-let allProducts=[];
-
-// LOAD PRODUCTS
 fetch(BASE+"/products")
-.then(res=>res.json())
-.then(data=>{
-  allProducts=data;
-  render(data);
+.then(r=>r.json())
+.then(d=>{
+all=d;
+render(d);
 });
 
-// RENDER
 function render(data){
-
-let html="";
-
-data.forEach(p=>{
-
-html+=`
+products.innerHTML=data.map(p=>`
 <div class="card">
-<span class="discount">-${Math.floor(Math.random()*60)}%</span>
+<img src="${p.images?.[0]||p.image||'https://via.placeholder.com/200'}">
+<h3>${p.name}</h3>
+<p class="price">₹${p.price}</p>
 
-<img src="${p.images?.[0] || p.image || 'https://via.placeholder.com/200'}">
-
-<h3>${p.name || "No Name"}</h3>
-
-<p class="price">₹${p.price || 0}</p>
-
-<button onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button>
-</div>
-`;
-
-});
-
-products.innerHTML=html;
+<button onclick="view('${p._id}')">View</button>
+<button onclick='add(${JSON.stringify(p)})'>Add</button>
+</div>`).join("");
 }
 
-// CATEGORY FILTER
-function filterCategory(cat){
-
-if(cat==="all"){
-  render(allProducts);
-  return;
+function view(id){
+location.href="product.html?id="+id;
 }
 
-const filtered = allProducts.filter(p=>
-  p.name?.toLowerCase().includes(cat)
-);
-
-render(filtered);
+function filter(cat){
+if(cat==="all") return render(all);
+render(all.filter(p=>p.name?.toLowerCase().includes(cat)));
 }
 
-// SEARCH
-search.addEventListener("input", e=>{
-const val=e.target.value.toLowerCase();
+search.oninput=e=>{
+let v=e.target.value.toLowerCase();
+render(all.filter(p=>p.name?.toLowerCase().includes(v)));
+};
 
-const filtered=allProducts.filter(p=>
-p.name?.toLowerCase().includes(val)
-);
-
-render(filtered);
-});
-
-// SORT
-function sortProducts(type){
-
-let sorted=[...allProducts];
-
-if(type==="low"){
-  sorted.sort((a,b)=>a.price-b.price);
-}
-if(type==="high"){
-  sorted.sort((a,b)=>b.price-a.price);
-}
-
-render(sorted);
-}
-
-// SLIDER AUTO
 let slides=document.querySelectorAll(".slide");
-let index=0;
-
+let i=0;
 setInterval(()=>{
-slides[index].classList.remove("active");
-index=(index+1)%slides.length;
-slides[index].classList.add("active");
+slides[i].classList.remove("active");
+i=(i+1)%slides.length;
+slides[i].classList.add("active");
 },3000);
 
-// ADD TO CART
-function addToCart(p){
-
+function add(p){
 const token=localStorage.getItem("token");
-
-if(!token){
-alert("Login first ❗");
-location.href="login.html";
-return;
-}
-
 fetch(BASE+"/add-to-cart",{
 method:"POST",
 headers:{
@@ -281,10 +133,7 @@ headers:{
 "Authorization":"Bearer "+token
 },
 body:JSON.stringify({product:p})
-})
-.then(res=>res.text())
-.then(msg=>alert(msg));
-
+}).then(()=>alert("Added 🛒"));
 }
 
 </script>
