@@ -58,6 +58,11 @@ input{
 const BASE="https://furniturebackend-adua.onrender.com";
 const token=localStorage.getItem("token");
 
+if(!token){
+  alert("Login first ❗");
+  location.href="login.html";
+}
+
 function pay(){
 
 fetch(BASE+"/place-order",{
@@ -70,7 +75,10 @@ headers:{
 .then(res=>res.text())
 .then(msg=>{
 alert(msg);
-location.href="orders.html";
+
+// ✅ AFTER PAYMENT
+window.location.href="orders.html";
+
 });
 
 }

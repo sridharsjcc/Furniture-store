@@ -54,12 +54,6 @@ button{
   border:none;
   cursor:pointer;
 }
-
-.empty{
-  text-align:center;
-  margin-top:50px;
-  font-size:18px;
-}
 </style>
 </head>
 
@@ -79,12 +73,12 @@ button{
 <h3>Price Details</h3>
 
 <p>Subtotal: ₹<span id="subtotal">0</span></p>
-<p>GST (18%): ₹<span id="gst">0</span></p>
+<p>GST: ₹<span id="gst">0</span></p>
 <p>Delivery: ₹<span id="delivery">0</span></p>
 
 <h3>Total: ₹<span id="total">0</span></h3>
 
-<button class="checkout" onclick="checkout()">Checkout</button>
+<button class="checkout" onclick="checkout()">Proceed to Payment</button>
 </div>
 </div>
 
@@ -95,34 +89,35 @@ button{
 const BASE="https://furniturebackend-adua.onrender.com";
 const token=localStorage.getItem("token");
 
-// LOGIN CHECK
 if(!token){
   alert("Login first ❗");
   location.href="login.html";
 }
 
 // LOAD CART
-function load(){
-fetch(BASE+"/get-cart",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer " + token   // ✅ FIXED
+async function load(){
+try{
+  const res = await fetch(BASE+"/get-cart",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+token
+    }
+  });
+
+  const data = await res.json();
+  render(data);
+
+}catch{
+  cartItems.innerHTML="<h2>Failed to load cart ❌</h2>";
 }
-})
-.then(r=>r.json())
-.then(data=>render(data))
-.catch(()=>{
-cartItems.innerHTML="<h2>Failed to load cart ❌</h2>";
-});
 }
 
 // RENDER
 function render(data){
 
-if(!data || !data.length){
-cartItems.innerHTML="<div class='empty'>Your cart is empty 🛒</div>";
-
+if(!data.length){
+cartItems.innerHTML="<h2>Your cart is empty 🛒</h2>";
 subtotal.innerText=0;
 gst.innerText=0;
 delivery.innerText=0;
@@ -131,99 +126,77 @@ return;
 }
 
 let html="";
-let subtotalVal=0;
+let sub=0;
 
 data.forEach(i=>{
-
-subtotalVal += i.price * i.qty;
+sub += i.price * i.qty;
 
 html += `
 <div class="item">
-<img src="${i.image || 'https://via.placeholder.com/150'}">
-
+<img src="${i.image}">
 <div>
 <h3>${i.name}</h3>
 <p>₹${i.price}</p>
 
-<div>
 <button onclick="dec('${i.id}')">-</button>
 ${i.qty}
 <button onclick="inc('${i.id}')">+</button>
-</div>
 
 <button onclick="removeItem('${i.id}')">❌ Remove</button>
 </div>
 </div>`;
 });
 
-cartItems.innerHTML = html;
+cartItems.innerHTML=html;
 
-// CALC
-let gstVal=Math.round(subtotalVal*0.18);
-let deliveryVal=subtotalVal>0?500:0;
-let totalVal=subtotalVal+gstVal+deliveryVal;
+let gstVal=Math.round(sub*0.18);
+let deliveryVal=sub>0?500:0;
 
-subtotal.innerText=subtotalVal;
+subtotal.innerText=sub;
 gst.innerText=gstVal;
 delivery.innerText=deliveryVal;
-total.innerText=totalVal;
+total.innerText=sub+gstVal+deliveryVal;
 }
 
-// INCREASE
+// ACTIONS
 function inc(id){
 fetch(BASE+"/inc",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":"Bearer " + token   // ✅ FIXED
+"Authorization":"Bearer "+token
 },
 body:JSON.stringify({id})
 }).then(load);
 }
 
-// DECREASE
 function dec(id){
 fetch(BASE+"/dec",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":"Bearer " + token   // ✅ FIXED
+"Authorization":"Bearer "+token
 },
 body:JSON.stringify({id})
 }).then(load);
 }
 
-// REMOVE
 function removeItem(id){
 fetch(BASE+"/remove",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":"Bearer " + token   // ✅ FIXED
+"Authorization":"Bearer "+token
 },
 body:JSON.stringify({id})
 }).then(load);
 }
 
-// CHECKOUT
+// 👉 ONLY REDIRECT (NO ORDER HERE)
 function checkout(){
-location.href="payment.html";
-}
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer " + token   // ✅ FIXED
-}
-})
-.then(res=>res.text())
-.then(msg=>{
-alert(msg);
-load();
-});
-
+  window.location.href="payment.html";
 }
 
-// INIT
 load();
 
 </script>
