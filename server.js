@@ -82,12 +82,59 @@ function auth(req,res,next){
   }
 }
 
+// ================= AUTH ROUTES =================
+
+// ✅ SIGNUP
+app.post("/signup", async (req,res)=>{
+  const {username, password} = req.body;
+
+  if(!username || !password){
+    return res.send("Missing fields ❌");
+  }
+
+  const exists = await User.findOne({username});
+  if(exists) return res.send("User exists ❌");
+
+  const hash = await bcrypt.hash(password, 10);
+
+  await User.create({
+    username,
+    password: hash,
+    isAdmin: username === "admin", // 🔥 admin control
+    cart: []
+  });
+
+  res.send("Signup success ✅");
+});
+
+// ✅ LOGIN
+app.post("/login", async (req,res)=>{
+  const {username, password} = req.body;
+
+  const user = await User.findOne({username});
+  if(!user) return res.send({error:"Invalid ❌"});
+
+  const match = await bcrypt.compare(password, user.password);
+  if(!match) return res.send({error:"Invalid ❌"});
+
+  const token = jwt.sign(
+    {username:user.username, isAdmin:user.isAdmin},
+    SECRET
+  );
+
+  res.send({
+    token,
+    username:user.username,
+    isAdmin:user.isAdmin
+  });
+});
+
 // ================= IMAGE UPLOAD =================
 app.post("/upload-image", auth, upload.single("image"), (req,res)=>{
   res.send({ url: req.file.path });
 });
 
-// ================= ADD PRODUCT =================
+// ================= PRODUCTS =================
 app.post("/add-product", auth, async (req,res)=>{
 
   if(!req.user.isAdmin){
@@ -108,7 +155,6 @@ app.post("/add-product", auth, async (req,res)=>{
   res.send("Product added ✅");
 });
 
-// ================= PRODUCTS =================
 app.get("/products", async (req,res)=>{
   res.send(await Product.find());
 });
