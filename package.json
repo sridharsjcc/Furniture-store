@@ -10,6 +10,7 @@
     "bcrypt": "^5.1.0",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.4.1",
