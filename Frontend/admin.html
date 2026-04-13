@@ -1,64 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Admin Panel</title>
-
-<style>
-body{font-family:Arial;margin:0;background:#f1f3f6;}
-.header{background:#131921;color:white;padding:15px;display:flex;justify-content:space-between;}
-.container{padding:20px;}
-.box{background:white;padding:20px;border-radius:10px;width:320px;}
-input{width:100%;padding:10px;margin:10px 0;}
-button{padding:10px;width:100%;}
-.card{background:white;padding:10px;margin:10px 0;border-radius:8px;}
-</style>
-</head>
-
-<body>
-
-<div class="header">
-<h2>👑 Admin Panel</h2>
-<a href="index.html" style="color:white">Home</a>
-</div>
-
-<div class="container">
-
-<div class="box">
-<h3>Add Product</h3>
-
-<input id="name" placeholder="Name">
-<input id="price" placeholder="Price">
-<input id="image" placeholder="Image URL">
-<input id="category" placeholder="Category (sofa/bed)">
-<input id="desc" placeholder="Description">
-
-<button onclick="addProduct()">Add Product</button>
-</div>
-
-<div>
-<h3>Products</h3>
-<div id="list"></div>
-</div>
-
-</div>
-
-<script>
-
 const BASE="https://furniturebackend-adua.onrender.com";
 const token=localStorage.getItem("token");
 
-// CHECK ADMIN
-function getUser(){
-  try{
-    return JSON.parse(atob(token.split('.')[1]));
-  }catch{return null;}
-}
+let uploadedImage="";
 
-const user=getUser();
+// UPLOAD IMAGE
+function upload(){
+const file=document.getElementById("file").files[0];
 
-if(!token || !user || !user.isAdmin){
-  alert("Admin only ❌");
-  location.href="index.html";
+const formData=new FormData();
+formData.append("image",file);
+
+fetch(BASE+"/upload",{
+method:"POST",
+headers:{
+"Authorization":"Bearer "+token
+},
+body:formData
+})
+.then(res=>res.json())
+.then(d=>{
+uploadedImage=d.url;
+alert("Image uploaded ✅");
+});
 }
 
 // ADD PRODUCT
@@ -73,39 +36,12 @@ headers:{
 body:JSON.stringify({
 name:name.value,
 price:Number(price.value),
-image:image.value,
+image:uploadedImage,
 category:category.value,
 description:desc.value
 })
 })
 .then(res=>res.text())
-.then(msg=>{
-alert(msg);
-load();
-});
+.then(msg=>alert(msg));
+
 }
-
-// LOAD PRODUCTS
-function load(){
-fetch(BASE+"/products")
-.then(res=>res.json())
-.then(data=>{
-
-list.innerHTML=data.map(p=>`
-<div class="card">
-<img src="${p.image}" width="100"><br>
-<b>${p.name}</b><br>
-₹${p.price}<br>
-Category: ${p.category}
-</div>
-`).join("");
-
-});
-}
-
-load();
-
-</script>
-
-</body>
-</html>
