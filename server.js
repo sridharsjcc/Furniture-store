@@ -58,17 +58,8 @@ const ProductSchema = new mongoose.Schema({
   category: String
 });
 
-const OrderSchema = new mongoose.Schema({
-  username: String,
-  items: Array,
-  total: Number,
-  date: String,
-  status: String
-});
-
 const User = mongoose.model("User", UserSchema);
 const Product = mongoose.model("Product", ProductSchema);
-const Order = mongoose.model("Order", OrderSchema);
 
 // ================= AUTH =================
 function auth(req,res,next){
@@ -83,8 +74,6 @@ function auth(req,res,next){
 }
 
 // ================= AUTH ROUTES =================
-
-// ✅ SIGNUP
 app.post("/signup", async (req,res)=>{
   const {username, password} = req.body;
 
@@ -100,14 +89,13 @@ app.post("/signup", async (req,res)=>{
   await User.create({
     username,
     password: hash,
-    isAdmin: username === "admin", // 🔥 admin control
+    isAdmin: username === "admin",
     cart: []
   });
 
   res.send("Signup success ✅");
 });
 
-// ✅ LOGIN
 app.post("/login", async (req,res)=>{
   const {username, password} = req.body;
 
@@ -134,7 +122,7 @@ app.post("/upload-image", auth, upload.single("image"), (req,res)=>{
   res.send({ url: req.file.path });
 });
 
-// ================= PRODUCTS =================
+// ================= ADD PRODUCT (FIXED) =================
 app.post("/add-product", auth, async (req,res)=>{
 
   if(!req.user.isAdmin){
@@ -143,24 +131,43 @@ app.post("/add-product", auth, async (req,res)=>{
 
   const {name, price, image, category, description} = req.body;
 
+  if(!name || !price){
+    return res.send("Missing fields ❌");
+  }
+
+  const finalImage = image && image.trim() !== ""
+    ? image
+    : "https://dummyimage.com/400x300/cccccc/000000&text=No+Image";
+
   await Product.create({
     name,
     price,
-    image,
-    images:[image],
-    category,
-    description
+    image: finalImage,
+    images: [finalImage],
+    category: category || "general",
+    description: description || ""
   });
 
   res.send("Product added ✅");
 });
 
+// ================= PRODUCTS =================
 app.get("/products", async (req,res)=>{
   res.send(await Product.find());
 });
 
 app.get("/product/:id", async (req,res)=>{
   res.send(await Product.findById(req.params.id));
+});
+
+// ================= ADD TO CART (NEW FIX) =================
+app.post("/add-to-cart", auth, async (req,res)=>{
+  const user = await User.findOne({username: req.user.username});
+
+  user.cart.push(req.body.product);
+  await user.save();
+
+  res.send("Added to cart ✅");
 });
 
 // ================= SERVER =================

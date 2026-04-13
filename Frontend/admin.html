@@ -68,8 +68,12 @@ status.innerText="✅ Uploaded!";
 });
 }
 
-// ADD PRODUCT
 function addProduct(){
+
+if(!name.value || !price.value){
+  alert("Enter name & price ❗");
+  return;
+}
 
 fetch(BASE+"/add-product",{
 method:"POST",
@@ -80,16 +84,15 @@ headers:{
 body:JSON.stringify({
 name:name.value,
 price:Number(price.value),
-image:imageUrl,
-category:category.value,
-description:desc.value
+image:imageUrl || "",   // ✅ allow empty
+category:category.value || "general",
+description:desc.value || ""
 })
 })
 .then(res=>res.text())
-.then(msg=>alert(msg));
+.then(msg=>{
+alert(msg);
+location.reload();
+})
+.catch(()=>alert("Error ❌"));
 }
-
-</script>
-
-</body>
-</html>
