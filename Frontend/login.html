@@ -31,6 +31,11 @@ button{
   padding:10px;
   width:100%;
   margin-top:5px;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#ddd;
 }
 </style>
 </head>
@@ -45,6 +50,7 @@ button{
 
 <button onclick="signup()">Signup</button>
 <button onclick="login()">Login</button>
+
 <br><br>
 <a href="index.html">⬅ Back to Home</a>
 </div>
@@ -53,28 +59,73 @@ button{
 
 const BASE="https://furniturebackend-adua.onrender.com";
 
+// SIGNUP
 function signup(){
-fetch(BASE+"/signup",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:u.value,password:p.value})
-})
-.then(r=>r.text())
-.then(alert);
+
+if(!u.value || !p.value){
+  alert("Enter username & password ❗");
+  return;
 }
 
-function login(){
-fetch(BASE+"/login",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:u.value,password:p.value})
+fetch(BASE+"/signup",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    username:u.value,
+    password:p.value
+  })
 })
-.then(r=>r.json())
-.then(d=>{
-localStorage.setItem("token",d.token);
-alert("Login success ✅");
-window.location="index.html";
+.then(res=>res.text())
+.then(msg=>{
+  alert(msg);
 });
+
+}
+
+// LOGIN
+function login(){
+
+if(!u.value || !p.value){
+  alert("Enter username & password ❗");
+  return;
+}
+
+fetch(BASE+"/login",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    username:u.value,
+    password:p.value
+  })
+})
+.then(res=>res.json())
+.then(data=>{
+
+  // ❌ error handling
+  if(!data.token){
+    alert("Invalid login ❌");
+    return;
+  }
+
+  // ✅ store token
+  localStorage.setItem("token", data.token);
+
+  alert("Login success ✅");
+
+  // 👑 CHECK ADMIN
+  const user = JSON.parse(atob(data.token.split('.')[1]));
+
+  if(user.isAdmin){
+    window.location = "admin.html"; // 👉 go to admin panel
+  }else{
+    window.location = "index.html";
+  }
+
+})
+.catch(()=>{
+  alert("Server error ❌");
+});
+
 }
 
 </script>
