@@ -1,16 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+
+<style>
+body{font-family:Arial;margin:0;background:#f1f3f6;}
+.header{background:#131921;color:white;padding:15px;}
+.container{padding:20px;}
+.box{background:white;padding:20px;border-radius:10px;width:320px;}
+input{width:100%;padding:10px;margin:10px 0;}
+button{padding:10px;width:100%;}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<h2>👑 Admin Panel</h2>
+</div>
+
+<div class="container">
+
+<div class="box">
+<h3>Add Product</h3>
+
+<input id="name" placeholder="Name">
+<input id="price" placeholder="Price">
+<input id="category" placeholder="Category">
+<input id="desc" placeholder="Description">
+
+<input type="file" id="file">
+
+<button onclick="upload()">Upload Image</button>
+<p id="status"></p>
+
+<button onclick="addProduct()">Add Product</button>
+</div>
+
+</div>
+
+<script>
+
 const BASE="https://furniturebackend-adua.onrender.com";
 const token=localStorage.getItem("token");
 
-let uploadedImage="";
+let imageUrl="";
 
 // UPLOAD IMAGE
 function upload(){
+
 const file=document.getElementById("file").files[0];
 
 const formData=new FormData();
 formData.append("image",file);
 
-fetch(BASE+"/upload",{
+fetch(BASE+"/upload-image",{
 method:"POST",
 headers:{
 "Authorization":"Bearer "+token
@@ -18,9 +62,9 @@ headers:{
 body:formData
 })
 .then(res=>res.json())
-.then(d=>{
-uploadedImage=d.url;
-alert("Image uploaded ✅");
+.then(data=>{
+imageUrl=data.url;
+status.innerText="✅ Uploaded!";
 });
 }
 
@@ -36,12 +80,16 @@ headers:{
 body:JSON.stringify({
 name:name.value,
 price:Number(price.value),
-image:uploadedImage,
+image:imageUrl,
 category:category.value,
 description:desc.value
 })
 })
 .then(res=>res.text())
 .then(msg=>alert(msg));
-
 }
+
+</script>
+
+</body>
+</html>
