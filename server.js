@@ -1,4 +1,4 @@
-require("dotenv").config();
+reqconst MONGO_URI = process.env.MONGO_URI;uire("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
